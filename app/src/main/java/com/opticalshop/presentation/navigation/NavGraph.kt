@@ -10,6 +10,7 @@ import androidx.navigation.navArgument
 import com.opticalshop.presentation.screens.auth.login.LoginScreen
 import com.opticalshop.presentation.screens.auth.register.RegisterScreen
 import com.opticalshop.presentation.screens.cart.CartScreen
+import com.opticalshop.presentation.screens.checkout.CheckoutScreen
 import com.opticalshop.presentation.screens.home.HomeScreen
 import com.opticalshop.presentation.screens.splash.SplashScreen
 
@@ -81,7 +82,20 @@ fun NavGraph(
                     navController.popBackStack()
                 },
                 onCheckoutClick = {
-                    // Navigate to checkout
+                    navController.navigate(Screen.Checkout.route)
+                }
+            )
+        }
+
+        composable(Screen.Checkout.route) {
+            CheckoutScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onOrderSuccess = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
                 }
             )
         }

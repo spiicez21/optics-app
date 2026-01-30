@@ -4,7 +4,7 @@
 - [x] Implement Firebase Authentication (Login/Register/Logout)
 - [x] Set up Firestore product & category fetching
 - [x] Implement Add to Cart & Cart management
-- [ ] Build Checkout flow (Address, Payment, Order Summary)
+- [x] Build Checkout flow (Address, Payment, Order Summary)
 - [ ] Implement Profile management & Address book
 
 ## Enhanced Features (Priority 2)

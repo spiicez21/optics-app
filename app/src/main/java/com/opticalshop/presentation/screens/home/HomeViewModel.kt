@@ -4,18 +4,24 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.opticalshop.data.model.CartItem
 import com.opticalshop.domain.model.Result
+import com.opticalshop.domain.usecase.auth.GetCurrentUserUseCase
+import com.opticalshop.domain.usecase.cart.AddToCartUseCase
 import com.opticalshop.domain.usecase.product.GetCategoriesUseCase
 import com.opticalshop.domain.usecase.product.GetProductsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getProductsUseCase: GetProductsUseCase,
-    private val getCategoriesUseCase: GetCategoriesUseCase
+    private val getCategoriesUseCase: GetCategoriesUseCase,
+    private val addToCartUseCase: AddToCartUseCase,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase
 ) : ViewModel() {
 
     private val _state = mutableStateOf(HomeState())
@@ -49,6 +55,22 @@ class HomeViewModel @Inject constructor(
                 )
             }.collect { newState ->
                 _state.value = newState
+            }
+        }
+    }
+
+    fun addToCart(product: com.opticalshop.data.model.Product) {
+        viewModelScope.launch {
+            val user = getCurrentUserUseCase().first()
+            if (user != null) {
+                val cartItem = CartItem(
+                    productId = product.id,
+                    productName = product.name,
+                    productImageUrl = if (product.images.isNotEmpty()) product.images[0] else "",
+                    price = product.price,
+                    quantity = 1
+                )
+                addToCartUseCase(user.id, cartItem)
             }
         }
     }

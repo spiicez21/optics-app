@@ -3,6 +3,7 @@ package com.opticalshop.data.remote
 import com.google.firebase.firestore.FirebaseFirestore
 import com.opticalshop.data.model.CartItem
 import com.opticalshop.data.model.Category
+import com.opticalshop.data.model.Order
 import com.opticalshop.data.model.Product
 import com.opticalshop.utils.Constants
 import kotlinx.coroutines.channels.awaitClose
@@ -105,5 +106,63 @@ class FirestoreService @Inject constructor(
             .document(productId)
             .delete()
             .await()
+    }
+
+    // Order Operations
+    suspend fun placeOrder(userId: String, order: Order) {
+        firestore.collection(Constants.USERS_COLLECTION)
+            .document(userId)
+            .collection(Constants.ORDERS_COLLECTION)
+            .document(order.id)
+            .set(order)
+            .await()
+    }
+
+    suspend fun clearCart(userId: String) {
+        val cartRef = firestore.collection(Constants.USERS_COLLECTION)
+            .document(userId)
+            .collection(Constants.CART_COLLECTION)
+        
+        val snapshot = cartRef.get().await()
+        firestore.runBatch { batch ->
+            for (doc in snapshot.documents) {
+                batch.delete(doc.reference)
+            }
+        }.await()
+    }
+
+    fun getOrders(userId: String): Flow<List<Order>> = callbackFlow {
+        val subscription = firestore.collection(Constants.USERS_COLLECTION)
+            .document(userId)
+            .collection(Constants.ORDERS_COLLECTION)
+            .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val orders = snapshot.toObjects(Order::class.java)
+                    trySend(orders)
+                }
+            }
+        awaitClose { subscription.remove() }
+    }
+
+    fun getOrderById(userId: String, orderId: String): Flow<Order?> = callbackFlow {
+        val subscription = firestore.collection(Constants.USERS_COLLECTION)
+            .document(userId)
+            .collection(Constants.ORDERS_COLLECTION)
+            .document(orderId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    trySend(snapshot.toObject(Order::class.java))
+                }
+            }
+        awaitClose { subscription.remove() }
     }
 }

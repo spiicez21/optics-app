@@ -100,7 +100,8 @@ fun HomeScreen(
                                 Box(modifier = Modifier.weight(1f)) {
                                     ProductCard(
                                         product = product,
-                                        onProductClick = onProductClick
+                                        onProductClick = onProductClick,
+                                        onAddToCart = viewModel::addToCart
                                     )
                                 }
                             }
