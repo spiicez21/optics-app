@@ -1,11 +1,11 @@
-package com.opticalshop.presentation.screens.auth.login
+package com.opticalshop.presentation.screens.auth.register
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.opticalshop.domain.model.Result
-import com.opticalshop.domain.usecase.auth.LoginUseCase
+import com.opticalshop.domain.usecase.auth.RegisterUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -13,9 +13,12 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class LoginViewModel @Inject constructor(
-    private val loginUseCase: LoginUseCase
+class RegisterViewModel @Inject constructor(
+    private val registerUseCase: RegisterUseCase
 ) : ViewModel() {
+
+    private val _name = mutableStateOf("")
+    val name: State<String> = _name
 
     private val _email = mutableStateOf("")
     val email: State<String> = _email
@@ -29,6 +32,10 @@ class LoginViewModel @Inject constructor(
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
+    fun onNameChange(newValue: String) {
+        _name.value = newValue
+    }
+
     fun onEmailChange(newValue: String) {
         _email.value = newValue
     }
@@ -37,10 +44,10 @@ class LoginViewModel @Inject constructor(
         _password.value = newValue
     }
 
-    fun login() {
+    fun register() {
         viewModelScope.launch {
             _state.value = Result.Loading
-            when (val result = loginUseCase(email.value, password.value)) {
+            when (val result = registerUseCase(email.value, password.value, name.value)) {
                 is Result.Success -> {
                     _state.value = Result.Success(Unit)
                     _eventFlow.emit(UiEvent.NavigateToHome)

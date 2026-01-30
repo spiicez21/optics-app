@@ -1,4 +1,4 @@
-package com.opticalshop.presentation.screens.auth.login
+package com.opticalshop.presentation.screens.auth.register
 
 import android.widget.Toast
 import androidx.compose.foundation.clickable
@@ -21,11 +21,12 @@ import com.opticalshop.presentation.components.OpticalTextField
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
-fun LoginScreen(
-    onLoginSuccess: () -> Unit,
-    onRegisterClick: () -> Unit,
-    viewModel: LoginViewModel = hiltViewModel()
+fun RegisterScreen(
+    onRegisterSuccess: () -> Unit,
+    onLoginClick: () -> Unit,
+    viewModel: RegisterViewModel = hiltViewModel()
 ) {
+    val name = viewModel.name.value
     val email = viewModel.email.value
     val password = viewModel.password.value
     val state = viewModel.state.value
@@ -34,10 +35,10 @@ fun LoginScreen(
     LaunchedEffect(key1 = true) {
         viewModel.eventFlow.collectLatest { event ->
             when (event) {
-                is LoginViewModel.UiEvent.NavigateToHome -> {
-                    onLoginSuccess()
+                is RegisterViewModel.UiEvent.NavigateToHome -> {
+                    onRegisterSuccess()
                 }
-                is LoginViewModel.UiEvent.ShowError -> {
+                is RegisterViewModel.UiEvent.ShowError -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
             }
@@ -56,19 +57,29 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(64.dp))
             
             Text(
-                text = "Welcome Back",
+                text = "Create Account",
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
             
             Text(
-                text = "Login to your account",
+                text = "Sign up to get started",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
             )
 
             Spacer(modifier = Modifier.height(48.dp))
+
+            OpticalTextField(
+                value = name,
+                onValueChange = viewModel::onNameChange,
+                label = "Full Name",
+                placeholder = "Enter your full name",
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             OpticalTextField(
                 value = email,
@@ -84,7 +95,7 @@ fun LoginScreen(
                 value = password,
                 onValueChange = viewModel::onPasswordChange,
                 label = "Password",
-                placeholder = "Enter your password",
+                placeholder = "Create a password",
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
@@ -92,8 +103,8 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             OpticalButton(
-                text = "Login",
-                onClick = viewModel::login,
+                text = "Register",
+                onClick = viewModel::register,
                 isLoading = state is com.opticalshop.domain.model.Result.Loading
             )
 
@@ -101,16 +112,16 @@ fun LoginScreen(
 
             Row {
                 Text(
-                    text = "Don't have an account? ",
+                    text = "Already have an account? ",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = "Register",
+                    text = "Login",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     ),
-                    modifier = Modifier.clickable { onRegisterClick() }
+                    modifier = Modifier.clickable { onLoginClick() }
                 )
             }
         }
