@@ -12,12 +12,12 @@
 - [x] Lens type and coating selector
 - [x] Order History & Detailed status tracking
 - [x] Real-time Search & Filter functionality
-- [ ] Image Gallery with zoom for product details
+- [x] Image Gallery with zoom for product details
 
 ## Polish & UI (Nice to Have)
-- [ ] Pull-to-refresh on product lists
-- [ ] Lottie animations for loading/success states
-- [ ] Dark Mode Support (Theme refinement)
+- [x] Pull-to-refresh on product lists
+- [x] Lottie animations for loading/success states
+- [ ] White  Mode Support (Theme refinement)
 - [x] Favorites/Wishlist functionality
 
 ## Future Roadmap (Priority 3)
