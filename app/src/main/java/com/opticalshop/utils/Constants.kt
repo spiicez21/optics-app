@@ -8,4 +8,5 @@ object Constants {
     const val ADDRESSES_COLLECTION = "addresses"
     const val ORDERS_COLLECTION = "orders"
     const val REVIEWS_COLLECTION = "reviews"
+    const val WISHLIST_COLLECTION = "wishlist"
 }

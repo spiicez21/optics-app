@@ -14,8 +14,18 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    
+    @javax.inject.Inject
+    lateinit var dataSeeder: com.opticalshop.utils.DataSeeder
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
+        
+        // Seeding database with 24 products once. 
+        // You can comment this out after running the app once.
+        //dataSeeder.seedProducts()
+
         setContent {
             OpticalShopTheme {
                 Surface(

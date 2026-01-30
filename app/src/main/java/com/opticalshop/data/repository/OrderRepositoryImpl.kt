@@ -32,9 +32,8 @@ class OrderRepositoryImpl @Inject constructor(
             .catch { e -> emit(Result.Error(Exception(e))) }
     }
 
-    override fun getOrderById(orderId: String): Flow<Result<Order>> {
-        // Note: FirestoreService expects userId, we might need to adjust or use a collectionGroup
-        return firestoreService.getOrderById("", orderId)
+    override fun getOrderById(userId: String, orderId: String): Flow<Result<Order>> {
+        return firestoreService.getOrderById(userId, orderId)
             .map { order ->
                 if (order != null) {
                     Result.Success(order)

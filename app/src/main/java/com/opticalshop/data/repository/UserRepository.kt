@@ -11,4 +11,9 @@ interface UserRepository {
     fun getAddresses(userId: String): Flow<Result<List<Address>>>
     suspend fun addAddress(userId: String, address: Address): Result<Unit>
     suspend fun deleteAddress(userId: String, addressId: String): Result<Unit>
+    
+    // Wishlist
+    fun getWishlist(userId: String): Flow<com.opticalshop.domain.model.Result<List<com.opticalshop.data.model.Product>>>
+    suspend fun addToWishlist(userId: String, product: com.opticalshop.data.model.Product): com.opticalshop.domain.model.Result<Unit>
+    suspend fun removeFromWishlist(userId: String, productId: String): com.opticalshop.domain.model.Result<Unit>
 }

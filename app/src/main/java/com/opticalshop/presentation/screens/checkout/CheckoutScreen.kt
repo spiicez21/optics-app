@@ -171,7 +171,8 @@ fun AddressStep(viewModel: CheckoutViewModel) {
     val state = viewModel.state.value
     LazyColumn(
         modifier = Modifier.padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(vertical = 16.dp)
     ) {
         item {
             OpticalTextField(
@@ -180,18 +181,24 @@ fun AddressStep(viewModel: CheckoutViewModel) {
                 label = "",
                 placeholder = "Full Name"
             )
+        }
+        item {
             OpticalTextField(
                 value = state.phoneNumber,
                 onValueChange = viewModel::onPhoneChange,
                 label = "",
                 placeholder = "Phone Number"
             )
+        }
+        item {
             OpticalTextField(
                 value = state.streetAddress,
                 onValueChange = viewModel::onAddressChange,
                 label = "",
                 placeholder = "Street Address"
             )
+        }
+        item {
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 OpticalTextField(
                     value = state.city,
@@ -208,6 +215,8 @@ fun AddressStep(viewModel: CheckoutViewModel) {
                     modifier = Modifier.weight(1f)
                 )
             }
+        }
+        item {
             OpticalTextField(
                 value = state.landmark,
                 onValueChange = viewModel::onLandmarkChange,

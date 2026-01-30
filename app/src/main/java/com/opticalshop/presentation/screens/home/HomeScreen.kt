@@ -15,6 +15,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.material.icons.Icons
 import com.opticalshop.presentation.components.CategoryChip
 import com.opticalshop.presentation.components.ProductCard
@@ -33,7 +34,7 @@ fun HomeScreen(
     Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 16.dp)
+            contentPadding = PaddingValues(bottom = 80.dp)
         ) {
             // Header
             item {
@@ -108,7 +109,9 @@ fun HomeScreen(
                                 com.opticalshop.presentation.components.ProductCard(
                                     product = product,
                                     onProductClick = onProductClick,
-                                    onAddToCart = viewModel::addToCart
+                                    onAddToCart = viewModel::addToCart,
+                                    isWishlisted = state.wishlistProductIds.contains(product.id),
+                                    onWishlistClick = { viewModel.toggleWishlist(product) }
                                 )
                             }
                         }
@@ -130,6 +133,24 @@ fun HomeScreen(
                 modifier = Modifier.align(Alignment.Center).padding(16.dp)
             )
         }
+
+        // Bottom Fade Overlay
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp)
+                .align(Alignment.BottomCenter)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            MaterialTheme.colorScheme.background.copy(alpha = 0.5f),
+                            MaterialTheme.colorScheme.background.copy(alpha = 0.8f),
+                            MaterialTheme.colorScheme.background
+                        )
+                    )
+                )
+        )
     }
 }
 
@@ -144,6 +165,7 @@ fun HomeHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .statusBarsPadding()
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

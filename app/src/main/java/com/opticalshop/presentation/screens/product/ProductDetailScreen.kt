@@ -111,13 +111,17 @@ fun ProductDetailScreen(
                     )
                     
                     IconButton(
-                        onClick = { /* Toggle Wishlist */ },
+                        onClick = { viewModel.toggleWishlist() },
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .padding(16.dp)
                             .background(MaterialTheme.colorScheme.surface, CircleShape)
                     ) {
-                        Icon(imageVector = Icons.Default.FavoriteBorder, contentDescription = "Wishlist", tint = Color.Gray)
+                        Icon(
+                            imageVector = if (state.isWishlisted) Icons.Default.Favorite else Icons.Default.FavoriteBorder, 
+                            contentDescription = "Wishlist", 
+                            tint = if (state.isWishlisted) Color.Red else Color.Gray
+                        )
                     }
                 }
 
@@ -230,17 +234,137 @@ fun ProductDetailScreen(
                         color = Color.Gray,
                         lineHeight = 20.sp
                     )
-                    Text(
-                        text = "Learn More",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable { /* Learn More */ }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Lens Options
+                    Text(text = "Lens Options", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    LensOptionSelector(
+                        title = "Lens Type",
+                        options = listOf("Single Vision", "Bifocal", "Progressive", "No Prescription"),
+                        selectedOption = state.lensType,
+                        onOptionSelect = viewModel::onLensTypeSelect
                     )
                     
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    LensOptionSelector(
+                        title = "Material",
+                        options = listOf("Plastic", "Polycarbonate", "High Index"),
+                        selectedOption = state.lensMaterial,
+                        onOptionSelect = viewModel::onLensMaterialSelect
+                    )
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Prescription Toggle
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { viewModel.togglePrescriptionForm() },
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Edit, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(text = "Add Prescription Details", fontWeight = FontWeight.Bold)
+                            }
+                            Icon(
+                                imageVector = if (state.showPrescriptionForm) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                contentDescription = null
+                            )
+                        }
+                    }
+
+                    if (state.showPrescriptionForm) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        PrescriptionForm(state, viewModel)
+                    }
+
                     Spacer(modifier = Modifier.height(100.dp))
                 }
             }
         }
+    }
+}
+@Composable
+fun LensOptionSelector(
+    title: String,
+    options: List<String>,
+    selectedOption: String,
+    onOptionSelect: (String) -> Unit
+) {
+    Column {
+        Text(text = title, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+        Spacer(modifier = Modifier.height(8.dp))
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            itemsIndexed(options) { _, option ->
+                val isSelected = selectedOption == option
+                Surface(
+                    modifier = Modifier
+                        .clickable { onOptionSelect(option) }
+                        .height(40.dp),
+                    shape = MaterialTheme.shapes.medium,
+                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                    border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                ) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 16.dp)) {
+                        Text(text = option, style = MaterialTheme.typography.labelLarge)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PrescriptionForm(state: ProductDetailState, viewModel: ProductDetailViewModel) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.medium)
+            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f), MaterialTheme.shapes.medium)
+            .padding(16.dp)
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            PrescriptionField(label = "SPH", value = state.sphere, onValueChange = viewModel::onSphereChange, modifier = Modifier.weight(1f))
+            PrescriptionField(label = "CYL", value = state.cylinder, onValueChange = viewModel::onCylinderChange, modifier = Modifier.weight(1f))
+            PrescriptionField(label = "Axis", value = state.axis, onValueChange = viewModel::onAxisChange, modifier = Modifier.weight(1f))
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            PrescriptionField(label = "Add", value = state.add, onValueChange = viewModel::onAddChange, modifier = Modifier.weight(1f))
+            PrescriptionField(label = "PD", value = state.pupillaryDistance, onValueChange = viewModel::onPdChange, modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PrescriptionField(label: String, value: String, onValueChange: (String) -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        Text(text = label, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+        Spacer(modifier = Modifier.height(4.dp))
+        TextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            colors = TextFieldDefaults.textFieldColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent
+            ),
+            shape = MaterialTheme.shapes.small,
+            singleLine = true
+        )
     }
 }

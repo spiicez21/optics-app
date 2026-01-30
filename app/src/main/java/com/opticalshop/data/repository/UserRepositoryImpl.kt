@@ -62,4 +62,31 @@ class UserRepositoryImpl @Inject constructor(
             Result.Error(e)
         }
     }
+
+    override fun getWishlist(userId: String): Flow<Result<List<com.opticalshop.data.model.Product>>> {
+        return firestoreService.getWishlistItems(userId)
+            .map { products ->
+                Result.Success(products) as Result<List<com.opticalshop.data.model.Product>>
+            }
+            .onStart { emit(Result.Loading) }
+            .catch { e -> emit(Result.Error(Exception(e))) }
+    }
+
+    override suspend fun addToWishlist(userId: String, product: com.opticalshop.data.model.Product): Result<Unit> {
+        return try {
+            firestoreService.addToWishlist(userId, product)
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+
+    override suspend fun removeFromWishlist(userId: String, productId: String): Result<Unit> {
+        return try {
+            firestoreService.removeFromWishlist(userId, productId)
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
 }

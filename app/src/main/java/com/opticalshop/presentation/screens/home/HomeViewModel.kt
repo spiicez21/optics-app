@@ -11,6 +11,8 @@ import com.opticalshop.domain.usecase.auth.GetCurrentUserUseCase
 import com.opticalshop.domain.usecase.cart.AddToCartUseCase
 import com.opticalshop.domain.usecase.product.GetCategoriesUseCase
 import com.opticalshop.domain.usecase.product.GetProductsUseCase
+import com.opticalshop.data.model.Product
+import com.opticalshop.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -22,7 +24,8 @@ class HomeViewModel @Inject constructor(
     private val getProductsUseCase: GetProductsUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
     private val addToCartUseCase: AddToCartUseCase,
-    private val getCurrentUserUseCase: GetCurrentUserUseCase
+    private val getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val _state = mutableStateOf(HomeState())
@@ -39,6 +42,18 @@ class HomeViewModel @Inject constructor(
                 userName = user?.name ?: "Guest",
                 profileImageUrl = user?.photoUrl
             )
+
+            if (user != null) {
+                launch {
+                    userRepository.getWishlist(user.id).collect { result ->
+                        if (result is Result.Success) {
+                            _state.value = _state.value.copy(
+                                wishlistProductIds = result.data.map { it.id }.toSet()
+                            )
+                        }
+                    }
+                }
+            }
 
             combine(
                 getProductsUseCase(),
@@ -82,7 +97,7 @@ class HomeViewModel @Inject constructor(
         // Filter popular products based on category
     }
 
-    fun addToCart(product: com.opticalshop.data.model.Product) {
+    fun addToCart(product: Product) {
         viewModelScope.launch {
             val user = getCurrentUserUseCase().first()
             if (user != null) {
@@ -94,6 +109,19 @@ class HomeViewModel @Inject constructor(
                     quantity = 1
                 )
                 addToCartUseCase(user.id, cartItem)
+            }
+        }
+    }
+
+    fun toggleWishlist(product: Product) {
+        viewModelScope.launch {
+            val user = getCurrentUserUseCase().first()
+            if (user != null) {
+                if (_state.value.wishlistProductIds.contains(product.id)) {
+                    userRepository.removeFromWishlist(user.id, product.id)
+                } else {
+                    userRepository.addToWishlist(user.id, product)
+                }
             }
         }
     }

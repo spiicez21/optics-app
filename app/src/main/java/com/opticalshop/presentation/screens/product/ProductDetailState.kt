@@ -7,6 +7,16 @@ data class ProductDetailState(
     val selectedImageIndex: Int = 0,
     val selectedSize: String = "M",
     val quantity: Int = 1,
+    val isWishlisted: Boolean = false,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val lensType: String = "",
+    val lensMaterial: String = "",
+    val lensCoating: String = "",
+    val showPrescriptionForm: Boolean = false,
+    val sphere: String = "",
+    val cylinder: String = "",
+    val axis: String = "",
+    val add: String = "",
+    val pupillaryDistance: String = ""
 )

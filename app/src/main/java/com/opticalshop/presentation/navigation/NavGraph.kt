@@ -16,6 +16,8 @@ import com.opticalshop.presentation.screens.cart.CartScreen
 import com.opticalshop.presentation.screens.checkout.CheckoutScreen
 import com.opticalshop.presentation.screens.home.HomeScreen
 import com.opticalshop.presentation.screens.profile.ProfileScreen
+import com.opticalshop.presentation.screens.orders.OrderDetailScreen
+import com.opticalshop.presentation.screens.orders.OrdersScreen
 import com.opticalshop.presentation.screens.product.ProductDetailScreen
 import com.opticalshop.presentation.screens.splash.SplashScreen
 
@@ -89,7 +91,10 @@ fun NavGraph(
         composable(Screen.Profile.route) {
             ProfileScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToAddresses = { navController.navigate(Screen.AddressBook.route) }
+                onNavigateToAddresses = { navController.navigate(Screen.AddressBook.route) },
+                onNavigateToOrders = { navController.navigate(Screen.Orders.route) },
+                onNavigateToWishlist = { navController.navigate(Screen.Wishlist.route) },
+                onNavigateToPersonalInfo = { navController.navigate(Screen.PersonalInfo.route) }
             )
         }
 
@@ -140,7 +145,40 @@ fun NavGraph(
                 }
             )
         }
-        
-        // Add other routes here...
+
+        composable(Screen.Wishlist.route) {
+            com.opticalshop.presentation.screens.wishlist.WishlistScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onProductClick = { productId ->
+                    navController.navigate(Screen.ProductDetail.createRoute(productId))
+                }
+            )
+        }
+
+        composable(Screen.Orders.route) {
+            com.opticalshop.presentation.screens.orders.OrdersScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onOrderClick = { orderId: String ->
+                    navController.navigate(Screen.OrderDetail.createRoute(orderId))
+                }
+            )
+        }
+
+        composable(
+            route = Screen.OrderDetail.route,
+            arguments = listOf(
+                navArgument("orderId") { type = NavType.StringType }
+            )
+        ) {
+            com.opticalshop.presentation.screens.orders.OrderDetailScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.PersonalInfo.route) {
+            com.opticalshop.presentation.screens.personal_info.PersonalInfoScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
     }
 }

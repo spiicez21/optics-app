@@ -20,6 +20,20 @@ import javax.inject.Singleton
 class FirestoreService @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
+    suspend fun addProduct(product: Product) {
+        firestore.collection(Constants.PRODUCTS_COLLECTION)
+            .document(product.id.ifBlank { UUID.randomUUID().toString() })
+            .set(product)
+            .await()
+    }
+
+    suspend fun addCategory(category: Category) {
+        firestore.collection(Constants.CATEGORIES_COLLECTION)
+            .document(category.id.ifBlank { UUID.randomUUID().toString() })
+            .set(category)
+            .await()
+    }
+
     fun getProducts(): Flow<List<Product>> = callbackFlow {
         val subscription = firestore.collection(Constants.PRODUCTS_COLLECTION)
             .addSnapshotListener { snapshot, error ->
@@ -232,6 +246,42 @@ class FirestoreService @Inject constructor(
             .document(userId)
             .collection(Constants.ADDRESSES_COLLECTION)
             .document(addressId)
+            .delete()
+            .await()
+    }
+
+    // Wishlist Operations
+    fun getWishlistItems(userId: String): Flow<List<Product>> = callbackFlow {
+        val subscription = firestore.collection(Constants.USERS_COLLECTION)
+            .document(userId)
+            .collection(Constants.WISHLIST_COLLECTION)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val products = snapshot.toObjects(Product::class.java)
+                    trySend(products)
+                }
+            }
+        awaitClose { subscription.remove() }
+    }
+
+    suspend fun addToWishlist(userId: String, product: Product) {
+        firestore.collection(Constants.USERS_COLLECTION)
+            .document(userId)
+            .collection(Constants.WISHLIST_COLLECTION)
+            .document(product.id)
+            .set(product)
+            .await()
+    }
+
+    suspend fun removeFromWishlist(userId: String, productId: String) {
+        firestore.collection(Constants.USERS_COLLECTION)
+            .document(userId)
+            .collection(Constants.WISHLIST_COLLECTION)
+            .document(productId)
             .delete()
             .await()
     }

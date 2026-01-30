@@ -27,6 +27,9 @@ import com.opticalshop.presentation.components.OpticalTextField
 fun ProfileScreen(
     onNavigateBack: () -> Unit,
     onNavigateToAddresses: () -> Unit,
+    onNavigateToOrders: () -> Unit,
+    onNavigateToWishlist: () -> Unit,
+    onNavigateToPersonalInfo: () -> Unit,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val state = viewModel.state.value
@@ -90,7 +93,7 @@ fun ProfileScreen(
                 ProfileItem(
                     icon = Icons.Default.Person,
                     title = "Personal Information",
-                    onClick = { /* Handle */ }
+                    onClick = onNavigateToPersonalInfo
                 )
                 
                 ProfileItem(
@@ -102,13 +105,13 @@ fun ProfileScreen(
                 ProfileItem(
                     icon = Icons.Default.ShoppingCart,
                     title = "My Orders",
-                    onClick = { /* Handle */ }
+                    onClick = onNavigateToOrders
                 )
                 
                 ProfileItem(
                     icon = Icons.Default.FavoriteBorder,
                     title = "Wishlist",
-                    onClick = { /* Handle */ }
+                    onClick = onNavigateToWishlist
                 )
                 
                 Spacer(modifier = Modifier.weight(1f))
