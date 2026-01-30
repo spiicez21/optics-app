@@ -23,8 +23,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.foundation.ExperimentalFoundationApi
 import coil.compose.AsyncImage
 import com.opticalshop.presentation.components.OpticalButton
+import androidx.compose.runtime.*
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,6 +43,7 @@ fun ProductDetailScreen(
 ) {
     val state = viewModel.state.value
     val product = state.product
+    var showGallery by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -107,7 +117,10 @@ fun ProductDetailScreen(
                         model = if (product.images.isNotEmpty()) product.images[state.selectedImageIndex] else null,
                         contentDescription = product.name,
                         contentScale = ContentScale.Fit,
-                        modifier = Modifier.fillMaxSize().padding(32.dp)
+                        modifier = Modifier
+                             .fillMaxSize()
+                             .padding(32.dp)
+                             .clickable { showGallery = true }
                     )
                     
                     IconButton(
@@ -144,7 +157,13 @@ fun ProductDetailScreen(
                                     color = if (state.selectedImageIndex == index) MaterialTheme.colorScheme.primary else Color.Transparent,
                                     shape = MaterialTheme.shapes.medium
                                 )
-                                .clickable { viewModel.onImageSelect(index) },
+                                .clickable {
+                                    if (state.selectedImageIndex == index) {
+                                         showGallery = true 
+                                    } else {
+                                         viewModel.onImageSelect(index) 
+                                    }
+                                },
                             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                         ) {
                             AsyncImage(
@@ -257,6 +276,15 @@ fun ProductDetailScreen(
                         onOptionSelect = viewModel::onLensMaterialSelect
                     )
                     
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    LensOptionSelector(
+                        title = "Coating",
+                        options = listOf("Anti-Reflective", "Blue Light Filter", "UV Protection", "Photochromic"),
+                        selectedOption = state.lensCoating,
+                        onOptionSelect = viewModel::onLensCoatingSelect
+                    )
+                    
                     Spacer(modifier = Modifier.height(24.dp))
 
                     // Prescription Toggle
@@ -293,6 +321,14 @@ fun ProductDetailScreen(
                 }
             }
         }
+    }
+
+    if (showGallery && product != null) {
+        FullScreenImageGallery(
+            images = product.images,
+            initialIndex = state.selectedImageIndex,
+            onDismiss = { showGallery = false }
+        )
     }
 }
 @Composable
@@ -365,6 +401,106 @@ fun PrescriptionField(label: String, value: String, onValueChange: (String) -> U
             ),
             shape = MaterialTheme.shapes.small,
             singleLine = true
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun FullScreenImageGallery(
+    images: List<String>,
+    initialIndex: Int,
+    onDismiss: () -> Unit
+) {
+    val pagerState = rememberPagerState(initialPage = initialIndex, pageCount = { images.size })
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+        ) {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize()
+            ) { page ->
+                ZoomableImage(imageUrl = images[page])
+            }
+
+            // Close Button
+            IconButton(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
+                    .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+            ) {
+                Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+            }
+
+            // Page Indicator
+            Row(
+                Modifier
+                    .height(50.dp)
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                repeat(images.size) { iteration ->
+                    val color = if (pagerState.currentPage == iteration) Color.White else Color.White.copy(alpha = 0.5f)
+                    Box(
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .clip(CircleShape)
+                            .background(color)
+                            .size(8.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ZoomableImage(imageUrl: String) {
+    var scale by remember { mutableFloatStateOf(1f) }
+    var offset by remember { mutableStateOf(androidx.compose.ui.geometry.Offset.Zero) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectTransformGestures { _, pan, zoom, _ ->
+                    scale = (scale * zoom).coerceIn(1f, 3f)
+                    if (scale > 1f) {
+                        val maxTranslateX = (size.width * (scale - 1)) / 2
+                        val maxTranslateY = (size.height * (scale - 1)) / 2
+                        offset = androidx.compose.ui.geometry.Offset(
+                            x = (offset.x + pan.x).coerceIn(-maxTranslateX, maxTranslateX),
+                            y = (offset.y + pan.y).coerceIn(-maxTranslateY, maxTranslateY)
+                        )
+                    } else {
+                        offset = androidx.compose.ui.geometry.Offset.Zero
+                    }
+                }
+            }
+    ) {
+        AsyncImage(
+            model = imageUrl,
+            contentDescription = null,
+            modifier = Modifier
+                .align(Alignment.Center)
+                .fillMaxSize()
+                .graphicsLayer(
+                    scaleX = scale,
+                    scaleY = scale,
+                    translationX = offset.x,
+                    translationY = offset.y
+                ),
+            contentScale = ContentScale.Fit
         )
     }
 }

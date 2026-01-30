@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.opticalshop.domain.model.Result
 import com.opticalshop.domain.usecase.auth.RegisterUseCase
+import com.opticalshop.domain.usecase.auth.LoginWithGoogleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -14,8 +15,26 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
-    private val registerUseCase: RegisterUseCase
+    private val registerUseCase: RegisterUseCase,
+    private val loginWithGoogleUseCase: LoginWithGoogleUseCase
 ) : ViewModel() {
+
+    fun onGoogleLogin(idToken: String) {
+        viewModelScope.launch {
+            _state.value = Result.Loading
+            when (val result = loginWithGoogleUseCase(idToken)) {
+                is Result.Success -> {
+                    _state.value = Result.Success(Unit)
+                    _eventFlow.emit(UiEvent.NavigateToHome)
+                }
+                is Result.Error -> {
+                    _state.value = Result.Error(result.exception)
+                    _eventFlow.emit(UiEvent.ShowError(result.exception.message ?: "Google Sign-In Failed"))
+                }
+                Result.Loading -> {}
+            }
+        }
+    }
 
     private val _name = mutableStateOf("")
     val name: State<String> = _name

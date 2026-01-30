@@ -22,6 +22,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.opticalshop.presentation.components.OpticalButton
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.opticalshop.R
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import androidx.compose.runtime.remember
+import androidx.compose.ui.res.stringResource
+import androidx.compose.foundation.shape.RoundedCornerShape
+import android.app.Activity
 import com.opticalshop.presentation.components.OpticalTextField
 import kotlinx.coroutines.flow.collectLatest
 
@@ -35,6 +45,34 @@ fun LoginScreen(
     val password = viewModel.password.value
     val state = viewModel.state.value
     val context = LocalContext.current
+    
+    val googleSignInClient = remember {
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(context.getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+        GoogleSignIn.getClient(context, gso)
+    }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                account?.idToken?.let { idToken ->
+                     viewModel.onGoogleLogin(idToken)
+                }
+            } catch (e: ApiException) {
+                // Common codes: 10 (Developer Error), 12500 (Sign In Failed)
+                Toast.makeText(context, "Google Sign-In Failed: ${e.statusCode}\nMessage: ${e.status.statusMessage ?: "Unknown"}", Toast.LENGTH_LONG).show()
+                e.printStackTrace()
+            }
+        } else {
+             Toast.makeText(context, "Google Sign-In Cancelled", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     LaunchedEffect(key1 = true) {
         viewModel.eventFlow.collectLatest { event ->
@@ -117,6 +155,18 @@ fun LoginScreen(
                 isLoading = state is com.opticalshop.domain.model.Result.Loading,
                 modifier = Modifier.fillMaxWidth()
             )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            OutlinedButton(
+                onClick = { 
+                    launcher.launch(googleSignInClient.signInIntent)
+                },
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                 Text("Continue with Google", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 

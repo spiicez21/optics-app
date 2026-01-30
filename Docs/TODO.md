@@ -8,17 +8,17 @@
 - [x] Implement Profile management & Address book
 
 ## Enhanced Features (Priority 2)
-- [ ] Prescription Input system for optical lenses
-- [ ] Lens type and coating selector
-- [ ] Order History & Detailed status tracking
-- [ ] Real-time Search & Filter functionality
+- [x] Prescription Input system for optical lenses
+- [x] Lens type and coating selector
+- [x] Order History & Detailed status tracking
+- [x] Real-time Search & Filter functionality
 - [ ] Image Gallery with zoom for product details
 
 ## Polish & UI (Nice to Have)
 - [ ] Pull-to-refresh on product lists
 - [ ] Lottie animations for loading/success states
 - [ ] Dark Mode Support (Theme refinement)
-- [ ] Favorites/Wishlist functionality
+- [x] Favorites/Wishlist functionality
 
 ## Future Roadmap (Priority 3)
 - [ ] Virtual Try-on (AR) integration

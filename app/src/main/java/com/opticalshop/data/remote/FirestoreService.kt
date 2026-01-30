@@ -190,6 +190,17 @@ class FirestoreService @Inject constructor(
             .await()
     }
 
+    suspend fun syncUserOnLogin(user: User) {
+        val userRef = firestore.collection(Constants.USERS_COLLECTION).document(user.id)
+        val snapshot = userRef.get().await()
+        if (!snapshot.exists()) {
+            userRef.set(user).await()
+        } else {
+            // Optional: Update basic info if needed, but let's preserve existing data for now
+            // userRef.update("displayName", user.displayName, "photoUrl", user.photoUrl).await()
+        }
+    }
+
     // Profile & Address Operations
     fun getProfile(userId: String): Flow<User?> = callbackFlow {
         val subscription = firestore.collection(Constants.USERS_COLLECTION)

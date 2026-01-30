@@ -2,6 +2,7 @@ package com.opticalshop.data.remote
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.AuthCredential
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -24,6 +25,9 @@ class FirebaseAuthService @Inject constructor(
 
     suspend fun login(email: String, pass: String) =
         firebaseAuth.signInWithEmailAndPassword(email, pass)
+    
+    fun signInWithCredential(credential: AuthCredential) =
+        firebaseAuth.signInWithCredential(credential)
 
     suspend fun register(email: String, pass: String) =
         firebaseAuth.createUserWithEmailAndPassword(email, pass)

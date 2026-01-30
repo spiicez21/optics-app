@@ -11,6 +11,7 @@ data class HomeState(
     val featuredProducts: List<Product> = emptyList(),
     val popularProducts: List<Product> = emptyList(),
     val searchQuery: String = "",
+    val allProducts: List<Product> = emptyList(), // Store all products here
     val wishlistProductIds: Set<String> = emptySet(),
     val isLoading: Boolean = false,
     val error: String? = null

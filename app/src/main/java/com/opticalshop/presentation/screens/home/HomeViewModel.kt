@@ -74,27 +74,44 @@ class HomeViewModel @Inject constructor(
                     listOf(Category(id = "all", name = "All")) + categories
                 } else categories
 
+                val allProducts = products // Keep reference to all products
+                
                 _state.value.copy(
                     categories = finalCategories,
                     featuredProducts = products.filter { it.featured },
-                    popularProducts = products, // For now, show all as popular
+                    allProducts = allProducts,
+                    popularProducts = allProducts, 
                     isLoading = isLoading,
                     error = error
                 )
             }.collect { newState ->
                 _state.value = newState
+                filterProducts()
             }
         }
     }
 
     fun onSearchQueryChange(query: String) {
         _state.value = _state.value.copy(searchQuery = query)
-        // In a real app, you would filter or search from repository here
+        filterProducts()
     }
 
     fun onCategorySelect(categoryId: String) {
         _state.value = _state.value.copy(selectedCategoryId = categoryId)
-        // Filter popular products based on category
+        filterProducts()
+    }
+
+    private fun filterProducts() {
+        val query = _state.value.searchQuery.trim().lowercase()
+        val categoryId = _state.value.selectedCategoryId
+        
+        val filtered = _state.value.allProducts.filter { product ->
+            val matchesSearch = product.name.lowercase().contains(query) || product.description.lowercase().contains(query)
+            val matchesCategory = categoryId == "all" || product.category == categoryId
+            matchesSearch && matchesCategory
+        }
+        
+        _state.value = _state.value.copy(popularProducts = filtered)
     }
 
     fun addToCart(product: Product) {

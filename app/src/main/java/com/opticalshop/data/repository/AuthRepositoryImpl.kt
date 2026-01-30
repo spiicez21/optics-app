@@ -33,6 +33,28 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun loginWithGoogle(idToken: String): Result<User> {
+        return try {
+            val credential = com.google.firebase.auth.GoogleAuthProvider.getCredential(idToken, null)
+            val result = authService.signInWithCredential(credential).await()
+            val firebaseUser = result.user
+            if (firebaseUser != null) {
+                val user = User(
+                    id = firebaseUser.uid,
+                    email = firebaseUser.email ?: "",
+                    displayName = firebaseUser.displayName ?: "",
+                    photoUrl = firebaseUser.photoUrl?.toString() ?: ""
+                )
+                firestoreService.syncUserOnLogin(user)
+                Result.Success(user)
+            } else {
+                Result.Error(Exception("Google Sign-In failed: User is null"))
+            }
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+
     override suspend fun register(email: String, pass: String, name: String): Result<User> {
         return try {
             val result = authService.register(email, pass).await()
