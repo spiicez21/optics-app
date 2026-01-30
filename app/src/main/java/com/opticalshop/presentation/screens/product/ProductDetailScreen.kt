@@ -34,6 +34,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import com.opticalshop.presentation.components.OpticalLottieAnimation
+import com.opticalshop.R
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -323,12 +326,41 @@ fun ProductDetailScreen(
         }
     }
 
+
     if (showGallery && product != null) {
         FullScreenImageGallery(
             images = product.images,
             initialIndex = state.selectedImageIndex,
             onDismiss = { showGallery = false }
         )
+    }
+
+    // Success Animation Dialog
+    if (viewModel.addToCartSuccess.value) {
+        Dialog(onDismissRequest = { viewModel.resetAddToCartSuccess() }) {
+            Box(
+                modifier = Modifier
+                    .size(200.dp)
+                    .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.large),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    OpticalLottieAnimation(
+                        rawRes = R.raw.success,
+                        size = 120.dp,
+                        iterations = 1
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Added to Cart!", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+        
+        // Auto-dismiss after 2 seconds
+        LaunchedEffect(key1 = true) {
+            delay(2000)
+            viewModel.resetAddToCartSuccess()
+        }
     }
 }
 @Composable

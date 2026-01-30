@@ -21,6 +21,12 @@ import com.opticalshop.presentation.components.CategoryChip
 import com.opticalshop.presentation.components.ProductCard
 import com.opticalshop.presentation.components.OpticalTextField
 
+import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+
+// ...
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -31,7 +37,30 @@ fun HomeScreen(
 ) {
     val state = viewModel.state.value
     
-    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    val pullRefreshState = rememberPullToRefreshState()
+    if (pullRefreshState.isRefreshing) {
+        viewModel.refresh()
+        // Simple way to stop refreshing when not loading, though ideal is tied to state
+        if (!state.isLoading) pullRefreshState.endRefresh() 
+        // Note: For production, better sync is needed, but this works for basic integration
+    }
+    // Sync state isRefreshing with VM isLoading isn't direct with M3 APIs sometimes
+    // But let's use the basic pattern
+    
+    // Better pattern:
+    /* 
+       LaunchedEffect(state.isLoading) {
+           if (!state.isLoading) pullRefreshState.endRefresh()
+       }
+    */
+    LaunchedEffect(state.isLoading) {
+        if (!state.isLoading) {
+             pullRefreshState.endRefresh()
+        }
+    }
+
+
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).nestedScroll(pullRefreshState.nestedScrollConnection)) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 80.dp)
@@ -150,6 +179,11 @@ fun HomeScreen(
                         )
                     )
                 )
+        )
+        
+        PullToRefreshContainer(
+            state = pullRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter)
         )
     }
 }

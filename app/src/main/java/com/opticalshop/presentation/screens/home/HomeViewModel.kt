@@ -35,6 +35,10 @@ class HomeViewModel @Inject constructor(
         getHomeData()
     }
 
+    fun refresh() {
+        getHomeData()
+    }
+
     private fun getHomeData() {
         viewModelScope.launch {
             val user = getCurrentUserUseCase().first()

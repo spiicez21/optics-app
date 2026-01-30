@@ -110,6 +110,13 @@ class ProductDetailViewModel @Inject constructor(
     fun onAddChange(value: String) { _state.value = _state.value.copy(add = value) }
     fun onPdChange(value: String) { _state.value = _state.value.copy(pupillaryDistance = value) }
 
+    private val _addToCartSuccess = mutableStateOf(false)
+    val addToCartSuccess: State<Boolean> = _addToCartSuccess
+
+    fun resetAddToCartSuccess() {
+        _addToCartSuccess.value = false
+    }
+
     fun addToCart() {
         val product = _state.value.product ?: return
         viewModelScope.launch {
@@ -143,6 +150,7 @@ class ProductDetailViewModel @Inject constructor(
                     lensOptions = lensOptions
                 )
                 addToCartUseCase(user.id, cartItem)
+                _addToCartSuccess.value = true
             }
         }
     }
