@@ -5,7 +5,7 @@
 - [x] Set up Firestore product & category fetching
 - [x] Implement Add to Cart & Cart management
 - [x] Build Checkout flow (Address, Payment, Order Summary)
-- [ ] Implement Profile management & Address book
+- [x] Implement Profile management & Address book
 
 ## Enhanced Features (Priority 2)
 - [ ] Prescription Input system for optical lenses

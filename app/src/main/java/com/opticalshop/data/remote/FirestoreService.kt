@@ -1,15 +1,18 @@
 package com.opticalshop.data.remote
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.opticalshop.data.model.Address
 import com.opticalshop.data.model.CartItem
 import com.opticalshop.data.model.Category
 import com.opticalshop.data.model.Order
 import com.opticalshop.data.model.Product
+import com.opticalshop.domain.model.User
 import com.opticalshop.utils.Constants
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -164,5 +167,65 @@ class FirestoreService @Inject constructor(
                 }
             }
         awaitClose { subscription.remove() }
+    }
+
+    // Profile & Address Operations
+    fun getProfile(userId: String): Flow<User?> = callbackFlow {
+        val subscription = firestore.collection(Constants.USERS_COLLECTION)
+            .document(userId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    trySend(snapshot.toObject(User::class.java))
+                }
+            }
+        awaitClose { subscription.remove() }
+    }
+
+    suspend fun updateProfile(userId: String, updates: Map<String, Any>) {
+        firestore.collection(Constants.USERS_COLLECTION)
+            .document(userId)
+            .update(updates)
+            .await()
+    }
+
+    fun getAddresses(userId: String): Flow<List<Address>> = callbackFlow {
+        val subscription = firestore.collection(Constants.USERS_COLLECTION)
+            .document(userId)
+            .collection(Constants.ADDRESSES_COLLECTION)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val addresses = snapshot.toObjects(Address::class.java)
+                    trySend(addresses)
+                }
+            }
+        awaitClose { subscription.remove() }
+    }
+
+    suspend fun addAddress(userId: String, address: Address) {
+        val addressRef = firestore.collection(Constants.USERS_COLLECTION)
+            .document(userId)
+            .collection(Constants.ADDRESSES_COLLECTION)
+            .document(address.id.ifBlank { UUID.randomUUID().toString() })
+        
+        val finalAddress = if (address.id.isBlank()) address.copy(id = addressRef.id) else address
+        
+        addressRef.set(finalAddress).await()
+    }
+
+    suspend fun deleteAddress(userId: String, addressId: String) {
+        firestore.collection(Constants.USERS_COLLECTION)
+            .document(userId)
+            .collection(Constants.ADDRESSES_COLLECTION)
+            .document(addressId)
+            .delete()
+            .await()
     }
 }

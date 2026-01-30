@@ -8,6 +8,8 @@ import com.opticalshop.data.repository.OrderRepository
 import com.opticalshop.data.repository.OrderRepositoryImpl
 import com.opticalshop.data.repository.ProductRepository
 import com.opticalshop.data.repository.ProductRepositoryImpl
+import com.opticalshop.data.repository.UserRepository
+import com.opticalshop.data.repository.UserRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -41,4 +43,10 @@ abstract class RepositoryModule {
     abstract fun bindOrderRepository(
         orderRepositoryImpl: OrderRepositoryImpl
     ): OrderRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindUserRepository(
+        userRepositoryImpl: UserRepositoryImpl
+    ): UserRepository
 }
