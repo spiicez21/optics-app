@@ -3,7 +3,7 @@
 ## Core Features (Priority 1)
 - [x] Implement Firebase Authentication (Login/Register/Logout)
 - [x] Set up Firestore product & category fetching
-- [ ] Implement Add to Cart & Cart management
+- [x] Implement Add to Cart & Cart management
 - [ ] Build Checkout flow (Address, Payment, Order Summary)
 - [ ] Implement Profile management & Address book
 

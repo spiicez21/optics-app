@@ -31,6 +31,7 @@ import com.opticalshop.data.model.Product
 fun ProductCard(
     product: Product,
     onProductClick: (String) -> Unit,
+    onAddToCart: (Product) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -43,14 +44,34 @@ fun ProductCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column {
-            AsyncImage(
-                model = if (product.images.isNotEmpty()) product.images[0] else null,
-                contentDescription = product.name,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp)
-            )
+            Box {
+                AsyncImage(
+                    model = if (product.images.isNotEmpty()) product.images[0] else null,
+                    contentDescription = product.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(150.dp)
+                )
+                
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp)
+                        .size(36.dp)
+                        .clickable { onAddToCart(product) },
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary,
+                    tonalElevation = 4.dp
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add to Cart",
+                        modifier = Modifier.padding(8.dp),
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+            }
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(
                     text = product.brand,

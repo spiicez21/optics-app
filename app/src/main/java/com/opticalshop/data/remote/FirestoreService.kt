@@ -1,12 +1,14 @@
 package com.opticalshop.data.remote
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.opticalshop.data.model.CartItem
 import com.opticalshop.data.model.Category
 import com.opticalshop.data.model.Product
 import com.opticalshop.utils.Constants
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -58,5 +60,50 @@ class FirestoreService @Inject constructor(
                 }
             }
         awaitClose { subscription.remove() }
+    }
+
+    // Cart Operations
+    fun getCartItems(userId: String): Flow<List<CartItem>> = callbackFlow {
+        val subscription = firestore.collection(Constants.USERS_COLLECTION)
+            .document(userId)
+            .collection(Constants.CART_COLLECTION)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val items = snapshot.toObjects(CartItem::class.java)
+                    trySend(items)
+                }
+            }
+        awaitClose { subscription.remove() }
+    }
+
+    suspend fun addToCart(userId: String, cartItem: CartItem) {
+        firestore.collection(Constants.USERS_COLLECTION)
+            .document(userId)
+            .collection(Constants.CART_COLLECTION)
+            .document(cartItem.productId)
+            .set(cartItem)
+            .await()
+    }
+
+    suspend fun updateCartQuantity(userId: String, productId: String, quantity: Int) {
+        firestore.collection(Constants.USERS_COLLECTION)
+            .document(userId)
+            .collection(Constants.CART_COLLECTION)
+            .document(productId)
+            .update("quantity", quantity)
+            .await()
+    }
+
+    suspend fun removeFromCart(userId: String, productId: String) {
+        firestore.collection(Constants.USERS_COLLECTION)
+            .document(userId)
+            .collection(Constants.CART_COLLECTION)
+            .document(productId)
+            .delete()
+            .await()
     }
 }

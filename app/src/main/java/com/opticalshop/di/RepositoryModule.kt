@@ -2,6 +2,8 @@ package com.opticalshop.di
 
 import com.opticalshop.data.repository.AuthRepository
 import com.opticalshop.data.repository.AuthRepositoryImpl
+import com.opticalshop.data.repository.CartRepository
+import com.opticalshop.data.repository.CartRepositoryImpl
 import com.opticalshop.data.repository.ProductRepository
 import com.opticalshop.data.repository.ProductRepositoryImpl
 import dagger.Binds
@@ -25,4 +27,10 @@ abstract class RepositoryModule {
     abstract fun bindProductRepository(
         productRepositoryImpl: ProductRepositoryImpl
     ): ProductRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCartRepository(
+        cartRepositoryImpl: CartRepositoryImpl
+    ): CartRepository
 }
