@@ -9,7 +9,8 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
-    private val authService: FirebaseAuthService
+    private val authService: FirebaseAuthService,
+    private val firestoreService: com.opticalshop.data.remote.FirestoreService
 ) : AuthRepository {
 
     override suspend fun login(email: String, pass: String): Result<User> {
@@ -37,13 +38,13 @@ class AuthRepositoryImpl @Inject constructor(
             val result = authService.register(email, pass).await()
             val firebaseUser = result.user
             if (firebaseUser != null) {
-                Result.Success(
-                    User(
-                        id = firebaseUser.uid,
-                        email = firebaseUser.email ?: "",
-                        displayName = name
-                    )
+                val user = User(
+                    id = firebaseUser.uid,
+                    email = firebaseUser.email ?: "",
+                    displayName = name
                 )
+                firestoreService.saveProfile(user)
+                Result.Success(user)
             } else {
                 Result.Error(Exception("Registration failed: User is null"))
             }

@@ -31,6 +31,6 @@ class MainActivity : ComponentActivity() {
 
     @androidx.compose.runtime.Composable
     private fun NavHostControllerWrapper(navController: androidx.navigation.NavHostController) {
-        NavGraph(navController = navController)
+        com.opticalshop.presentation.navigation.MainContainer(navController = navController)
     }
 }

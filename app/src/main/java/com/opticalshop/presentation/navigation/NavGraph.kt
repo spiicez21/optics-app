@@ -1,6 +1,7 @@
 package com.opticalshop.presentation.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -15,16 +16,19 @@ import com.opticalshop.presentation.screens.cart.CartScreen
 import com.opticalshop.presentation.screens.checkout.CheckoutScreen
 import com.opticalshop.presentation.screens.home.HomeScreen
 import com.opticalshop.presentation.screens.profile.ProfileScreen
+import com.opticalshop.presentation.screens.product.ProductDetailScreen
 import com.opticalshop.presentation.screens.splash.SplashScreen
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: String = Screen.Splash.route
+    startDestination: String = Screen.Splash.route,
+    modifier: Modifier = Modifier
 ) {
     NavHost(
         navController = navController,
-        startDestination = startDestination
+        startDestination = startDestination,
+        modifier = modifier
     ) {
         composable(Screen.Splash.route) {
             SplashScreen(
@@ -109,6 +113,17 @@ fun NavGraph(
                 },
                 onCheckoutClick = {
                     navController.navigate(Screen.Checkout.route)
+                }
+            )
+        }
+
+        composable(
+            route = Screen.ProductDetail.route,
+            arguments = Screen.ProductDetail.arguments
+        ) {
+            ProductDetailScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }

@@ -169,6 +169,13 @@ class FirestoreService @Inject constructor(
         awaitClose { subscription.remove() }
     }
 
+    suspend fun saveProfile(user: User) {
+        firestore.collection(Constants.USERS_COLLECTION)
+            .document(user.id)
+            .set(user)
+            .await()
+    }
+
     // Profile & Address Operations
     fun getProfile(userId: String): Flow<User?> = callbackFlow {
         val subscription = firestore.collection(Constants.USERS_COLLECTION)

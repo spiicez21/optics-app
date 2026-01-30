@@ -1,9 +1,14 @@
 package com.opticalshop.presentation.screens.auth.login
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -47,35 +52,38 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .padding(24.dp)
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Spacer(modifier = Modifier.height(64.dp))
-            
             Text(
                 text = "Welcome Back",
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.onBackground
             )
             
+            Spacer(modifier = Modifier.height(8.dp))
+            
             Text(
-                text = "Login to your account",
+                text = "Login to your account to continue",
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                color = Color.Gray
             )
-
+            
             Spacer(modifier = Modifier.height(48.dp))
 
             OpticalTextField(
                 value = email,
                 onValueChange = viewModel::onEmailChange,
-                label = "Email Address",
-                placeholder = "Enter your email",
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                label = "",
+                placeholder = "Email Address",
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = Color.Gray) }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -83,18 +91,30 @@ fun LoginScreen(
             OpticalTextField(
                 value = password,
                 onValueChange = viewModel::onPasswordChange,
-                label = "Password",
-                placeholder = "Enter your password",
+                label = "",
+                placeholder = "Password",
                 visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = Color.Gray) }
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            Text(
+                text = "Forgot Password?",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(Alignment.End).clickable { /* Handle */ }
+            )
+
+            Spacer(modifier = Modifier.height(40.dp))
 
             OpticalButton(
                 text = "Login",
                 onClick = viewModel::login,
-                isLoading = state is com.opticalshop.domain.model.Result.Loading
+                isLoading = state is com.opticalshop.domain.model.Result.Loading,
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -102,10 +122,11 @@ fun LoginScreen(
             Row {
                 Text(
                     text = "Don't have an account? ",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
                 )
                 Text(
-                    text = "Register",
+                    text = "Sign Up",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary

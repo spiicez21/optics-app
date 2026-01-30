@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.opticalshop.data.model.CartItem
+import com.opticalshop.data.model.Category
 import com.opticalshop.domain.model.Result
 import com.opticalshop.domain.usecase.auth.GetCurrentUserUseCase
 import com.opticalshop.domain.usecase.cart.AddToCartUseCase
@@ -31,8 +32,14 @@ class HomeViewModel @Inject constructor(
         getHomeData()
     }
 
-    fun getHomeData() {
+    private fun getHomeData() {
         viewModelScope.launch {
+            val user = getCurrentUserUseCase().first()
+            _state.value = _state.value.copy(
+                userName = user?.name ?: "Guest",
+                profileImageUrl = user?.photoUrl
+            )
+
             combine(
                 getProductsUseCase(),
                 getCategoriesUseCase()
@@ -47,9 +54,15 @@ class HomeViewModel @Inject constructor(
                 val products = if (productsResult is Result.Success) productsResult.data else emptyList()
                 val categories = if (categoriesResult is Result.Success) categoriesResult.data else emptyList()
 
-                HomeState(
-                    categories = categories,
+                // Inject an "All" category if it doesn't exist
+                val finalCategories = if (categories.none { it.id == "all" }) {
+                    listOf(Category(id = "all", name = "All")) + categories
+                } else categories
+
+                _state.value.copy(
+                    categories = finalCategories,
                     featuredProducts = products.filter { it.featured },
+                    popularProducts = products, // For now, show all as popular
                     isLoading = isLoading,
                     error = error
                 )
@@ -57,6 +70,16 @@ class HomeViewModel @Inject constructor(
                 _state.value = newState
             }
         }
+    }
+
+    fun onSearchQueryChange(query: String) {
+        _state.value = _state.value.copy(searchQuery = query)
+        // In a real app, you would filter or search from repository here
+    }
+
+    fun onCategorySelect(categoryId: String) {
+        _state.value = _state.value.copy(selectedCategoryId = categoryId)
+        // Filter popular products based on category
     }
 
     fun addToCart(product: com.opticalshop.data.model.Product) {

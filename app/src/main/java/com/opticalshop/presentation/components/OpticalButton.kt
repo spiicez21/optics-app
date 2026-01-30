@@ -19,7 +19,11 @@ fun OpticalButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    isLoading: Boolean = false
+    isLoading: Boolean = false,
+    colors: androidx.compose.material3.ButtonColors = ButtonDefaults.buttonColors(
+        containerColor = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary
+    )
 ) {
     Button(
         onClick = onClick,
@@ -27,11 +31,9 @@ fun OpticalButton(
             .fillMaxWidth()
             .height(56.dp),
         enabled = enabled && !isLoading,
-        shape = RoundedCornerShape(12.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary
-        )
+        shape = androidx.compose.foundation.shape.CircleShape,
+        colors = colors,
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
     ) {
         if (isLoading) {
             // Can add ActivityIndicator here

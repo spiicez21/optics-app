@@ -18,38 +18,29 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import coil.compose.AsyncImage
 import com.opticalshop.data.model.Category
 
 @Composable
 fun CategoryChip(
     category: Category,
+    isSelected: Boolean,
     onCategoryClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    Surface(
         modifier = modifier
-            .padding(8.dp)
+            .padding(vertical = 8.dp, horizontal = 4.dp)
             .clickable { onCategoryClick(category.id) },
-        horizontalAlignment = Alignment.CenterHorizontally
+        shape = androidx.compose.foundation.shape.CircleShape,
+        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
     ) {
-        Surface(
-            modifier = Modifier
-                .size(60.dp)
-                .clip(CircleShape),
-            color = MaterialTheme.colorScheme.secondaryContainer
-        ) {
-            AsyncImage(
-                model = category.imageUrl,
-                contentDescription = category.name,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
-        }
-        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = category.name,
-            style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+            style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Medium
         )
     }

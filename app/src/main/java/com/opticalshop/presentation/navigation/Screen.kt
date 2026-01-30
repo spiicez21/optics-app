@@ -8,6 +8,11 @@ sealed class Screen(val route: String) {
     object ProductList : Screen("product_list")
     object ProductDetail : Screen("product_detail/{productId}") {
         fun createRoute(productId: String) = "product_detail/$productId"
+        val arguments = listOf(
+            androidx.navigation.navArgument("productId") {
+                type = androidx.navigation.NavType.StringType
+            }
+        )
     }
     object Cart : Screen("cart")
     object Checkout : Screen("checkout")

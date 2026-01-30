@@ -31,22 +31,30 @@ class ProfileViewModel @Inject constructor(
 
     private fun loadProfile() {
         viewModelScope.launch {
-            val user = getCurrentUserUseCase().first()
-            if (user != null) {
-                getProfileUseCase(user.id).collect { result ->
+            val firebaseUser = getCurrentUserUseCase().first()
+            if (firebaseUser != null) {
+                // Pre-fill from Firebase Auth while loading from Firestore
+                _state.value = _state.value.copy(
+                    name = firebaseUser.displayName,
+                    email = firebaseUser.email
+                )
+
+                getProfileUseCase(firebaseUser.id).collect { result ->
                     when (result) {
                         is Result.Success -> {
                             _state.value = _state.value.copy(
                                 user = result.data,
-                                name = result.data.name,
-                                email = result.data.email,
-                                isLoading = false
+                                name = if (result.data.displayName.isNotBlank()) result.data.displayName else firebaseUser.displayName,
+                                email = if (result.data.email.isNotBlank()) result.data.email else firebaseUser.email,
+                                isLoading = false,
+                                error = null
                             )
                         }
                         is Result.Error -> {
+                            // If Firestore profile is missing, we still have the Firebase info
                             _state.value = _state.value.copy(
                                 isLoading = false,
-                                error = result.exception.message
+                                error = if (result.exception.message == "User not found") null else result.exception.message
                             )
                         }
                         Result.Loading -> {

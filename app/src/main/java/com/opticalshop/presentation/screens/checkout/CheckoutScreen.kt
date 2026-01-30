@@ -4,7 +4,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.*
@@ -33,9 +36,10 @@ fun CheckoutScreen(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("Checkout") },
+                title = { Text("Checkout", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = {
                         if (state.currentStep == CheckoutStep.ADDRESS) onNavigateBack()
@@ -43,14 +47,51 @@ fun CheckoutScreen(
                     }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+                )
             )
+        },
+        bottomBar = {
+            Surface(
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 8.dp,
+                shadowElevation = 16.dp
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(24.dp)
+                        .fillMaxWidth()
+                        .navigationBarsPadding(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Total Amount", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                        Text(
+                            "$${String.format("%.2f", state.totalAmount)}",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    OpticalButton(
+                        text = if (state.currentStep == CheckoutStep.SUMMARY) "Place Order" else "Next",
+                        onClick = { viewModel.nextStep() },
+                        modifier = Modifier.width(180.dp),
+                        isLoading = state.isLoading
+                    )
+                }
+            }
         }
     ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
         ) {
             CheckoutStepper(currentStep = state.currentStep)
             
@@ -66,33 +107,9 @@ fun CheckoutScreen(
                 Text(
                     text = state.error,
                     color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(24.dp),
+                    style = MaterialTheme.typography.bodySmall
                 )
-            }
-
-            Surface(tonalElevation = 8.dp) {
-                Row(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Total Amount", style = MaterialTheme.typography.bodyMedium)
-                        Text(
-                            "$${String.format("%.2f", state.totalAmount)}",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                    OpticalButton(
-                        text = if (state.currentStep == CheckoutStep.SUMMARY) "Place Order" else "Next",
-                        onClick = { viewModel.nextStep() },
-                        modifier = Modifier.width(150.dp),
-                        isLoading = state.isLoading
-                    )
-                }
             }
         }
     }
@@ -104,14 +121,24 @@ fun CheckoutStepper(currentStep: CheckoutStep) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        StepIndicator("Address", currentStep.ordinal >= 0)
-        Divider(modifier = Modifier.weight(1f).padding(horizontal = 8.dp))
-        StepIndicator("Payment", currentStep.ordinal >= 1)
-        Divider(modifier = Modifier.weight(1f).padding(horizontal = 8.dp))
-        StepIndicator("Summary", currentStep.ordinal >= 2)
+        listOf(
+            "Address" to CheckoutStep.ADDRESS,
+            "Payment" to CheckoutStep.PAYMENT,
+            "Summary" to CheckoutStep.SUMMARY
+        ).forEachIndexed { index, pair ->
+            StepIndicator(pair.first, currentStep.ordinal >= pair.second.ordinal)
+            if (index < 2) {
+                Divider(
+                    modifier = Modifier
+                        .width(40.dp)
+                        .padding(bottom = 16.dp),
+                    color = if (currentStep.ordinal > index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                )
+            }
+        }
     }
 }
 
@@ -119,18 +146,22 @@ fun CheckoutStepper(currentStep: CheckoutStep) {
 fun StepIndicator(label: String, isActive: Boolean) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Surface(
-            modifier = Modifier.size(24.dp),
-            shape = MaterialTheme.shapes.extraSmall,
+            modifier = Modifier.size(32.dp),
+            shape = androidx.compose.foundation.shape.CircleShape,
             color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
         ) {
-            if (isActive) {
-                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color.White)
+            Box(contentAlignment = Alignment.Center) {
+                if (isActive) {
+                    Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(20.dp))
+                }
             }
         }
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             label,
             style = MaterialTheme.typography.labelSmall,
-            color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+            color = if (isActive) MaterialTheme.colorScheme.primary else Color.Gray,
+            fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal
         )
     }
 }
@@ -138,46 +169,50 @@ fun StepIndicator(label: String, isActive: Boolean) {
 @Composable
 fun AddressStep(viewModel: CheckoutViewModel) {
     val state = viewModel.state.value
-    LazyColumn(modifier = Modifier.padding(16.dp)) {
+    LazyColumn(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
         item {
             OpticalTextField(
                 value = state.fullName,
                 onValueChange = viewModel::onFullNameChange,
-                label = "Full Name"
+                label = "",
+                placeholder = "Full Name"
             )
-            Spacer(modifier = Modifier.height(12.dp))
             OpticalTextField(
                 value = state.phoneNumber,
                 onValueChange = viewModel::onPhoneChange,
-                label = "Phone Number"
+                label = "",
+                placeholder = "Phone Number"
             )
-            Spacer(modifier = Modifier.height(12.dp))
             OpticalTextField(
                 value = state.streetAddress,
                 onValueChange = viewModel::onAddressChange,
-                label = "Street Address"
+                label = "",
+                placeholder = "Street Address"
             )
-            Spacer(modifier = Modifier.height(12.dp))
-            Row {
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 OpticalTextField(
                     value = state.city,
                     onValueChange = viewModel::onCityChange,
-                    label = "City",
+                    label = "",
+                    placeholder = "City",
                     modifier = Modifier.weight(1f)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
                 OpticalTextField(
                     value = state.pincode,
                     onValueChange = viewModel::onPincodeChange,
-                    label = "Pincode",
+                    label = "",
+                    placeholder = "Pincode",
                     modifier = Modifier.weight(1f)
                 )
             }
-            Spacer(modifier = Modifier.height(12.dp))
             OpticalTextField(
                 value = state.landmark,
                 onValueChange = viewModel::onLandmarkChange,
-                label = "Landmark (Optional)"
+                label = "",
+                placeholder = "Landmark (Optional)"
             )
         }
     }
@@ -187,23 +222,47 @@ fun AddressStep(viewModel: CheckoutViewModel) {
 fun PaymentStep(viewModel: CheckoutViewModel) {
     val state = viewModel.state.value
     Column(modifier = Modifier.padding(16.dp)) {
-        Text("Select Payment Method", style = MaterialTheme.typography.titleMedium)
+        Text("Select Payment Method", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        PaymentOption(
+            title = "Cash on Delivery",
+            isSelected = state.paymentMethod == "COD",
+            onClick = { viewModel.onPaymentMethodChange("COD") }
+        )
         Spacer(modifier = Modifier.height(16.dp))
-        
+        PaymentOption(
+            title = "UPI / Digital Payment",
+            isSelected = state.paymentMethod == "UPI",
+            onClick = { viewModel.onPaymentMethodChange("UPI") }
+        )
+    }
+}
+
+@Composable
+fun PaymentOption(title: String, isSelected: Boolean, onClick: () -> Unit) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = MaterialTheme.shapes.medium,
+        color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.05f) else MaterialTheme.colorScheme.surface,
+        border = BorderStroke(
+            width = if (isSelected) 2.dp else 1.dp,
+            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
         Row(
+            modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.clickable { viewModel.onPaymentMethodChange("COD") }
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            RadioButton(selected = state.paymentMethod == "COD", onClick = { viewModel.onPaymentMethodChange("COD") })
-            Text("Cash on Delivery")
-        }
-        
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.clickable { viewModel.onPaymentMethodChange("UPI") }
-        ) {
-            RadioButton(selected = state.paymentMethod == "UPI", onClick = { viewModel.onPaymentMethodChange("UPI") })
-            Text("UPI / Digital Payment")
+            Text(text = title, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
+            RadioButton(
+                selected = isSelected,
+                onClick = onClick,
+                colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
+            )
         }
     }
 }
@@ -211,24 +270,39 @@ fun PaymentStep(viewModel: CheckoutViewModel) {
 @Composable
 fun SummaryStep(viewModel: CheckoutViewModel) {
     val state = viewModel.state.value
-    LazyColumn(modifier = Modifier.padding(16.dp)) {
+    LazyColumn(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
         item {
-            Text("Delivery Address", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text(state.fullName)
-            Text(state.streetAddress)
-            Text("${state.city} - ${state.pincode}")
-            Text("Phone: ${state.phoneNumber}")
-            Divider(modifier = Modifier.padding(vertical = 12.dp))
-            
-            Text("Items", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        }
-        items(state.cartItems) { item ->
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+                shape = MaterialTheme.shapes.medium
             ) {
-                Text("${item.productName} (x${item.quantity})", modifier = Modifier.weight(1f))
-                Text("$${item.price * item.quantity}")
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Delivery Address", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(state.fullName, fontWeight = FontWeight.Medium)
+                    Text(state.streetAddress, color = Color.Gray)
+                    Text("${state.city} - ${state.pincode}", color = Color.Gray)
+                    Text("Phone: ${state.phoneNumber}", color = Color.Gray)
+                }
+            }
+        }
+        
+        item {
+            Column {
+                Text("Item Summary", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
+                state.cartItems.forEach { item ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("${item.productName} (x${item.quantity})", modifier = Modifier.weight(1f), color = Color.Gray)
+                        Text("$${String.format("%.2f", item.price * item.quantity)}", fontWeight = FontWeight.Bold)
+                    }
+                }
             }
         }
     }
@@ -237,20 +311,33 @@ fun SummaryStep(viewModel: CheckoutViewModel) {
 @Composable
 fun OrderSuccessContent(onOrderSuccess: () -> Unit) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
+        modifier = Modifier.fillMaxSize().padding(24.dp).background(MaterialTheme.colorScheme.background),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            Icons.Default.CheckCircle,
-            contentDescription = null,
-            modifier = Modifier.size(100.dp),
-            tint = Color(0xFF4CAF50)
+        Surface(
+            modifier = Modifier.size(120.dp),
+            shape = androidx.compose.foundation.shape.CircleShape,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    Icons.Default.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(60.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(32.dp))
+        Text("Success!", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Text(
+            "Your order has been placed successfully.",
+            style = MaterialTheme.typography.bodyLarge,
+            color = Color.Gray,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
-        Spacer(modifier = Modifier.height(24.dp))
-        Text("Order Placed Successfully!", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        Text("Thank you for shopping with us.", style = MaterialTheme.typography.bodyLarge)
         Spacer(modifier = Modifier.height(48.dp))
-        OpticalButton(text = "Go to Home", onClick = onOrderSuccess)
+        OpticalButton(text = "Back to Exploration", onClick = onOrderSuccess)
     }
 }

@@ -12,6 +12,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.opticalshop.presentation.components.CartItemCard
 import com.opticalshop.presentation.components.OpticalButton
@@ -26,43 +28,53 @@ fun CartScreen(
     val state = viewModel.state.value
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("Shopping Cart") },
+                title = { Text("Shopping Cart", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+                )
             )
         },
         bottomBar = {
             if (state.cartItems.isNotEmpty()) {
                 Surface(
+                    color = MaterialTheme.colorScheme.surface,
                     tonalElevation = 8.dp,
-                    shadowElevation = 8.dp
+                    shadowElevation = 16.dp
                 ) {
                     Column(
                         modifier = Modifier
-                            .padding(16.dp)
+                            .padding(24.dp)
                             .fillMaxWidth()
+                            .navigationBarsPadding()
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 text = "Total",
-                                style = MaterialTheme.typography.titleLarge
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color.Gray
                             )
                             Text(
                                 text = "$${String.format("%.2f", state.totalAmount)}",
-                                style = MaterialTheme.typography.titleLarge,
+                                style = MaterialTheme.typography.headlineSmall,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold
                             )
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
                         OpticalButton(
                             text = "Proceed to Checkout",
                             onClick = onCheckoutClick
@@ -72,7 +84,7 @@ fun CartScreen(
             }
         }
     ) { padding ->
-        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
+        Box(modifier = Modifier.padding(padding).fillMaxSize().background(MaterialTheme.colorScheme.background)) {
             if (state.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else if (state.cartItems.isEmpty()) {
@@ -84,21 +96,30 @@ fun CartScreen(
                     Icon(
                         imageVector = Icons.Default.ShoppingCart,
                         contentDescription = null,
-                        modifier = Modifier.size(100.dp),
-                        tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                        modifier = Modifier.size(120.dp),
+                        tint = MaterialTheme.colorScheme.surfaceVariant
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = "Your cart is empty",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.outline
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Color.Gray,
+                        fontWeight = FontWeight.Medium
                     )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Button(
+                        onClick = onNavigateBack,
+                        shape = androidx.compose.foundation.shape.CircleShape,
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        Text("Explore Products", modifier = Modifier.padding(horizontal = 16.dp))
+                    }
                 }
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    contentPadding = PaddingValues(bottom = 120.dp, start = 16.dp, end = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(state.cartItems) { item ->
                         CartItemCard(
@@ -108,9 +129,6 @@ fun CartScreen(
                             onRemove = { viewModel.removeItem(item.productId) }
                         )
                     }
-                    item {
-                        Spacer(modifier = Modifier.height(100.dp)) // Padding for bottom bar
-                    }
                 }
             }
             
@@ -118,7 +136,7 @@ fun CartScreen(
                 Text(
                     text = state.error,
                     color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.align(Alignment.Center)
+                    modifier = Modifier.align(Alignment.Center).padding(24.dp)
                 )
             }
         }

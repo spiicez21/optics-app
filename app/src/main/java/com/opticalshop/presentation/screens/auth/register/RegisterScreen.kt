@@ -1,9 +1,15 @@
 package com.opticalshop.presentation.screens.auth.register
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -48,35 +54,38 @@ fun RegisterScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .padding(24.dp)
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Spacer(modifier = Modifier.height(64.dp))
-            
             Text(
                 text = "Create Account",
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.onBackground
             )
             
+            Spacer(modifier = Modifier.height(8.dp))
+            
             Text(
-                text = "Sign up to get started",
+                text = "Sign up to start your journey",
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                color = Color.Gray
             )
-
-            Spacer(modifier = Modifier.height(48.dp))
+            
+            Spacer(modifier = Modifier.height(40.dp))
 
             OpticalTextField(
                 value = name,
                 onValueChange = viewModel::onNameChange,
-                label = "Full Name",
-                placeholder = "Enter your full name",
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+                label = "",
+                placeholder = "Full Name",
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = Color.Gray) }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -84,9 +93,10 @@ fun RegisterScreen(
             OpticalTextField(
                 value = email,
                 onValueChange = viewModel::onEmailChange,
-                label = "Email Address",
-                placeholder = "Enter your email",
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                label = "",
+                placeholder = "Email Address",
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = Color.Gray) }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -94,18 +104,20 @@ fun RegisterScreen(
             OpticalTextField(
                 value = password,
                 onValueChange = viewModel::onPasswordChange,
-                label = "Password",
-                placeholder = "Create a password",
+                label = "",
+                placeholder = "Password",
                 visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = Color.Gray) }
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
             OpticalButton(
-                text = "Register",
+                text = "Sign Up",
                 onClick = viewModel::register,
-                isLoading = state is com.opticalshop.domain.model.Result.Loading
+                isLoading = state is com.opticalshop.domain.model.Result.Loading,
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -113,7 +125,8 @@ fun RegisterScreen(
             Row {
                 Text(
                     text = "Already have an account? ",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
                 )
                 Text(
                     text = "Login",

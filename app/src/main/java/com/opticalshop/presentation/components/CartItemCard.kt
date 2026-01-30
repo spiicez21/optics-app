@@ -10,6 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.background
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -24,63 +26,85 @@ fun CartItemCard(
     onRemove: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    Surface(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            .padding(vertical = 8.dp),
+        color = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.medium
     ) {
         Row(
-            modifier = Modifier
-                .padding(8.dp)
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AsyncImage(
-                model = cartItem.productImageUrl,
-                contentDescription = cartItem.productName,
-                contentScale = ContentScale.Crop,
+            Surface(
                 modifier = Modifier
-                    .size(80.dp)
-                    .clip(MaterialTheme.shapes.small)
-            )
+                    .size(100.dp)
+                    .clip(MaterialTheme.shapes.medium),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+            ) {
+                AsyncImage(
+                    model = cartItem.productImageUrl,
+                    contentDescription = cartItem.productName,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize().padding(8.dp)
+                )
+            }
             
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(16.dp))
             
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = cartItem.productName,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Text(
+                        text = cartItem.productName,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(onClick = onRemove, modifier = Modifier.size(24.dp)) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = "Remove",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+                
                 Text(
                     text = "$${cartItem.price}",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.secondary
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.secondary,
+                    fontWeight = FontWeight.Bold
                 )
                 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onDecrease) {
-                        Icon(Icons.Default.Remove, contentDescription = "Decrease")
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), androidx.compose.foundation.shape.CircleShape)
+                        .padding(horizontal = 4.dp)
+                ) {
+                    IconButton(onClick = onDecrease, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.Remove, contentDescription = "Decrease", modifier = Modifier.size(16.dp))
                     }
                     Text(
                         text = "${cartItem.quantity}",
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
-                    IconButton(onClick = onIncrease) {
-                        Icon(Icons.Default.Add, contentDescription = "Increase")
+                    IconButton(onClick = onIncrease, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.Add, contentDescription = "Increase", modifier = Modifier.size(16.dp))
                     }
                 }
-            }
-            
-            IconButton(onClick = onRemove) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "Remove",
-                    tint = MaterialTheme.colorScheme.error
-                )
             }
         }
     }
