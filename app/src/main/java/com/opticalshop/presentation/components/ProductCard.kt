@@ -3,6 +3,7 @@ package com.opticalshop.presentation.components
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Favorite
@@ -36,16 +37,15 @@ fun ProductCard(
             .padding(8.dp)
             .fillMaxWidth()
             .clickable { onProductClick(product.id) },
-        shape = MaterialTheme.shapes.large,
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp)
-                    .clip(MaterialTheme.shapes.large)
+                    .height(220.dp)
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
             ) {
                 AsyncImage(
@@ -54,31 +54,41 @@ fun ProductCard(
                     contentScale = ContentScale.Fit,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(16.dp)
+                        .padding(8.dp)
                 )
                 
-                IconButton(
-                    onClick = { onWishlistClick(product.id) },
+                Surface(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(8.dp)
+                        .padding(8.dp),
+                    shape = CircleShape,
+                    color = Color.White.copy(alpha = 0.8f),
+                    shadowElevation = 2.dp
                 ) {
-                    Icon(
-                        imageVector = if (isWishlisted) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = "Wishlist",
-                        tint = if (isWishlisted) Color.Red else Color.Gray
-                    )
+                    IconButton(
+                        onClick = { onWishlistClick(product.id) },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isWishlisted) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = "Wishlist",
+                            tint = if (isWishlisted) Color.Red else Color.Gray,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
             
-            Column(modifier = Modifier.padding(8.dp)) {
+            Column(modifier = Modifier.padding(12.dp)) {
                 Text(
                     text = product.name,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+                
+                Spacer(modifier = Modifier.height(4.dp))
                 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -87,14 +97,14 @@ fun ProductCard(
                 ) {
                     Column {
                         Text(
-                            text = "$${product.price}",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.secondary,
+                            text = "Rs ${product.price}",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold
                         )
                         if (product.originalPrice > product.price) {
                             Text(
-                                text = "$${product.originalPrice}",
+                                text = "Rs ${product.originalPrice}",
                                 style = MaterialTheme.typography.bodySmall.copy(textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough),
                                 color = Color.Gray
                             )
@@ -103,15 +113,16 @@ fun ProductCard(
                     
                     Surface(
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(36.dp)
                             .clickable { onAddToCart(product) },
-                        shape = MaterialTheme.shapes.medium,
-                        color = MaterialTheme.colorScheme.primary
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        shadowElevation = 4.dp
                     ) {
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = "Add",
-                            modifier = Modifier.padding(6.dp),
+                            modifier = Modifier.padding(8.dp),
                             tint = Color.White
                         )
                     }

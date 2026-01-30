@@ -22,7 +22,8 @@ import javax.inject.Inject
 class CheckoutViewModel @Inject constructor(
     private val getCartUseCase: GetCartUseCase,
     private val placeOrderUseCase: PlaceOrderUseCase,
-    private val getCurrentUserUseCase: GetCurrentUserUseCase
+    private val getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val userRepository: com.opticalshop.data.repository.UserRepository
 ) : ViewModel() {
 
     private val _state = mutableStateOf(CheckoutState())
@@ -30,6 +31,30 @@ class CheckoutViewModel @Inject constructor(
 
     init {
         loadCart()
+        autoFillFromProfile()
+    }
+
+    private fun autoFillFromProfile() {
+        viewModelScope.launch {
+            val user = getCurrentUserUseCase().first()
+            if (user != null) {
+                userRepository.getProfile(user.id).collect { result ->
+                    if (result is Result.Success) {
+                        val profile = result.data
+                        val mainAddress = profile.addresses.find { it.isDefault } ?: profile.addresses.firstOrNull()
+                        
+                        _state.value = _state.value.copy(
+                            fullName = profile.displayName.ifBlank { _state.value.fullName },
+                            phoneNumber = profile.phoneNumber.ifBlank { _state.value.phoneNumber },
+                            streetAddress = mainAddress?.streetAddress ?: _state.value.streetAddress,
+                            city = mainAddress?.city ?: _state.value.city,
+                            pincode = mainAddress?.pincode ?: _state.value.pincode,
+                            landmark = mainAddress?.landmark ?: _state.value.landmark
+                        )
+                    }
+                }
+            }
+        }
     }
 
     private fun loadCart() {

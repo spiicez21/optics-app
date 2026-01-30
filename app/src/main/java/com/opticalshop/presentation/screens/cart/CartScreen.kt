@@ -137,7 +137,7 @@ fun CartScreen(
                                 color = Color.Gray
                             )
                             Text(
-                                text = "$${String.format("%.2f", state.totalAmount)}",
+                                text = "Rs ${String.format("%.2f", state.totalAmount)}",
                                 style = MaterialTheme.typography.titleLarge,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold

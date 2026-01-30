@@ -17,6 +17,8 @@ data class PersonalInfoState(
     val name: String = "",
     val email: String = "",
     val phoneNumber: String = "",
+    val gender: String = "",
+    val age: String = "",
     val isLoading: Boolean = false,
     val isUpdating: Boolean = false,
     val error: String? = null,
@@ -47,6 +49,8 @@ class PersonalInfoViewModel @Inject constructor(
                             name = result.data.displayName,
                             email = result.data.email,
                             phoneNumber = result.data.phoneNumber,
+                            gender = result.data.gender,
+                            age = result.data.age,
                             isLoading = false
                         )
                     }
@@ -63,6 +67,14 @@ class PersonalInfoViewModel @Inject constructor(
         _state.value = _state.value.copy(phoneNumber = phone)
     }
 
+    fun onGenderChange(gender: String) {
+        _state.value = _state.value.copy(gender = gender)
+    }
+
+    fun onAgeChange(age: String) {
+        _state.value = _state.value.copy(age = age)
+    }
+
     fun updateProfile() {
         viewModelScope.launch {
             _state.value = _state.value.copy(isUpdating = true, error = null)
@@ -70,7 +82,9 @@ class PersonalInfoViewModel @Inject constructor(
             firebaseUser?.let { user ->
                 val updates = mapOf(
                     "displayName" to _state.value.name,
-                    "phoneNumber" to _state.value.phoneNumber
+                    "phoneNumber" to _state.value.phoneNumber,
+                    "gender" to _state.value.gender,
+                    "age" to _state.value.age
                 )
                 val result = userRepository.updateProfile(user.id, updates)
                 if (result is Result.Success) {

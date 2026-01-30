@@ -1,40 +1,39 @@
 package com.opticalshop.presentation.screens.auth.register
 
+import android.app.Activity
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.opticalshop.presentation.components.OpticalButton
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import com.opticalshop.R
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
-import androidx.compose.runtime.remember
-import androidx.compose.ui.res.stringResource
-import androidx.compose.foundation.shape.RoundedCornerShape
+import com.opticalshop.R
+import com.opticalshop.presentation.components.OpticalButton
 import com.opticalshop.presentation.components.OpticalTextField
 import kotlinx.coroutines.flow.collectLatest
-import android.app.Activity
 
 @Composable
 fun RegisterScreen(
@@ -45,8 +44,12 @@ fun RegisterScreen(
     val name = viewModel.name.value
     val email = viewModel.email.value
     val password = viewModel.password.value
+    val phoneNumber = viewModel.phoneNumber.value
+    val gender = viewModel.gender.value
+    val age = viewModel.age.value
     val state = viewModel.state.value
     val context = LocalContext.current
+    val scrollState = rememberScrollState()
     
     val googleSignInClient = remember {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -67,12 +70,9 @@ fun RegisterScreen(
                      viewModel.onGoogleLogin(idToken)
                 }
             } catch (e: ApiException) {
-                // Common codes: 10 (Developer Error), 12500 (Sign In Failed)
-                Toast.makeText(context, "Google Sign-In Failed: ${e.statusCode}\nMessage: ${e.status.statusMessage ?: "Unknown"}", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Google Sign-In Failed: ${e.statusCode}", Toast.LENGTH_LONG).show()
                 e.printStackTrace()
             }
-        } else {
-             Toast.makeText(context, "Google Sign-In Cancelled", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -94,13 +94,16 @@ fun RegisterScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .systemBarsPadding()
-            .padding(24.dp)
     ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(40.dp))
+            
             Text(
                 text = "Create Account",
                 style = MaterialTheme.typography.displaySmall,
@@ -118,12 +121,12 @@ fun RegisterScreen(
             
             Spacer(modifier = Modifier.height(40.dp))
 
+            // Form Fields
             OpticalTextField(
                 value = name,
                 onValueChange = viewModel::onNameChange,
                 label = "",
                 placeholder = "Full Name",
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                 leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = Color.Gray) }
             )
 
@@ -137,6 +140,60 @@ fun RegisterScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = Color.Gray) }
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OpticalTextField(
+                value = phoneNumber,
+                onValueChange = viewModel::onPhoneChange,
+                label = "",
+                placeholder = "Phone Number",
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, tint = Color.Gray) }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(modifier = Modifier.weight(1.5f)) {
+                    OpticalTextField(
+                        value = age,
+                        onValueChange = { if (it.all { char -> char.isDigit() } && it.length <= 3) viewModel.onAgeChange(it) },
+                        label = "",
+                        placeholder = "Age",
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        leadingIcon = { Icon(Icons.Default.DateRange, contentDescription = null, tint = Color.Gray) }
+                    )
+                }
+
+                // Gender Selection
+                Row(
+                    modifier = Modifier.weight(2f).height(56.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf("Male", "Female").forEach { genderOption ->
+                        val isSelected = gender == genderOption
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .clickable { viewModel.onGenderChange(genderOption) },
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                            contentColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+                            border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = genderOption.take(1), 
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -188,6 +245,8 @@ fun RegisterScreen(
                     modifier = Modifier.clickable { onLoginClick() }
                 )
             }
+            
+            Spacer(modifier = Modifier.height(40.dp))
         }
     }
 }

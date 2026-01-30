@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
@@ -18,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -42,57 +44,127 @@ import kotlinx.coroutines.delay
 @Composable
 fun ProductDetailScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToCheckout: () -> Unit,
     viewModel: ProductDetailViewModel = hiltViewModel()
 ) {
     val state = viewModel.state.value
     val product = state.product
     var showGallery by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(viewModel.navigateToCheckout.value) {
+        if (viewModel.navigateToCheckout.value) {
+            onNavigateToCheckout()
+            viewModel.resetNavigateToCheckout()
+        }
+    }
+
+    LaunchedEffect(viewModel.snackbarMessage.value) {
+        viewModel.snackbarMessage.value?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            viewModel.resetSnackbarMessage()
+        }
+    }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
-                title = { Text("Details", fontWeight = FontWeight.Bold) },
+            CenterAlignedTopAppBar(
+                title = { 
+                    Text(
+                        "Product Details", 
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold 
+                    ) 
+                },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                    Surface(
+                        onClick = onNavigateBack,
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surface,
+                        modifier = Modifier.padding(start = 16.dp).size(40.dp),
+                        shadowElevation = 2.dp
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack, 
+                                contentDescription = "Back",
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* Share */ }) {
-                        Icon(imageVector = Icons.Default.Share, contentDescription = "Share")
+                    Surface(
+                        onClick = { /* Share */ },
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surface,
+                        modifier = Modifier.padding(end = 16.dp).size(40.dp),
+                        shadowElevation = 2.dp
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.Share, 
+                                contentDescription = "Share",
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
-                    actionIconContentColor = MaterialTheme.colorScheme.onSurface
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color.Transparent,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
         },
         bottomBar = {
             if (product != null) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shadowElevation = 16.dp,
+                    color = MaterialTheme.colorScheme.surface
                 ) {
-                    OutlinedButton(
-                        onClick = { viewModel.addToCart() },
-                        modifier = Modifier.weight(1f).height(56.dp),
-                        shape = CircleShape,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .navigationBarsPadding()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(imageVector = Icons.Default.Add, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Add To Cart", fontWeight = FontWeight.Bold)
+                        Surface(
+                            onClick = { viewModel.addToCart() },
+                            modifier = Modifier.size(56.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.AddShoppingCart, 
+                                    contentDescription = "Add To Cart",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                        
+                        Button(
+                            onClick = { viewModel.buyNow() },
+                            modifier = Modifier.weight(1f).height(56.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                        ) {
+                            Text(
+                                "Buy Now", 
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
-                    OpticalButton(
-                        text = "Buy Now",
-                        onClick = { /* Buy Now logic */ },
-                        modifier = Modifier.weight(1f)
-                    )
                 }
             }
         }
@@ -108,12 +180,19 @@ fun ProductDetailScreen(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
             ) {
-                // Main Image
+                // Main Image Section
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(350.dp)
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+                        .height(380.dp)
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+                                    Color.Transparent
+                                )
+                            )
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     AsyncImage(
@@ -126,18 +205,48 @@ fun ProductDetailScreen(
                              .clickable { showGallery = true }
                     )
                     
-                    IconButton(
-                        onClick = { viewModel.toggleWishlist() },
+                    Surface(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .padding(16.dp)
-                            .background(MaterialTheme.colorScheme.surface, CircleShape)
+                            .padding(16.dp),
+                        shape = CircleShape,
+                        color = Color.White.copy(alpha = 0.9f),
+                        shadowElevation = 4.dp
                     ) {
-                        Icon(
-                            imageVector = if (state.isWishlisted) Icons.Default.Favorite else Icons.Default.FavoriteBorder, 
-                            contentDescription = "Wishlist", 
-                            tint = if (state.isWishlisted) Color.Red else Color.Gray
-                        )
+                        IconButton(
+                            onClick = { viewModel.toggleWishlist() },
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (state.isWishlisted) Icons.Default.Favorite else Icons.Default.FavoriteBorder, 
+                                contentDescription = "Wishlist", 
+                                tint = if (state.isWishlisted) Color.Red else Color.Gray,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+
+                    // Floating Page Indicator
+                    if (product.images.size > 1) {
+                         Row(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(bottom = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            product.images.forEachIndexed { index, _ ->
+                                val isActive = index == state.selectedImageIndex
+                                Box(
+                                    modifier = Modifier
+                                        .size(if (isActive) 24.dp else 8.dp, 8.dp)
+                                        .clip(CircleShape)
+                                        .background(
+                                            if (isActive) MaterialTheme.colorScheme.primary 
+                                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                                        )
+                                )
+                            }
+                        }
                     }
                 }
 
@@ -145,63 +254,73 @@ fun ProductDetailScreen(
                 LazyRow(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.Center,
+                        .padding(vertical = 16.dp),
+                    contentPadding = PaddingValues(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     itemsIndexed(product.images) { index, imageUrl ->
                         Surface(
                             modifier = Modifier
-                                .padding(horizontal = 4.dp)
-                                .size(60.dp)
-                                .clip(MaterialTheme.shapes.medium)
-                                .border(
-                                    width = 2.dp,
-                                    color = if (state.selectedImageIndex == index) MaterialTheme.colorScheme.primary else Color.Transparent,
-                                    shape = MaterialTheme.shapes.medium
-                                )
-                                .clickable {
-                                    if (state.selectedImageIndex == index) {
-                                         showGallery = true 
-                                    } else {
-                                         viewModel.onImageSelect(index) 
-                                    }
-                                },
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                .size(72.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            color = MaterialTheme.colorScheme.surface,
+                            shadowElevation = if (state.selectedImageIndex == index) 4.dp else 1.dp,
+                            border = BorderStroke(
+                                width = 2.dp,
+                                color = if (state.selectedImageIndex == index) MaterialTheme.colorScheme.primary else Color.Transparent
+                            ),
+                            onClick = {
+                                if (state.selectedImageIndex == index) {
+                                     showGallery = true 
+                                } else {
+                                     viewModel.onImageSelect(index) 
+                                }
+                            }
                         ) {
                             AsyncImage(
                                 model = imageUrl,
                                 contentDescription = null,
                                 contentScale = ContentScale.Fit,
-                                modifier = Modifier.fillMaxSize().padding(8.dp)
+                                modifier = Modifier.fillMaxSize().padding(10.dp)
                             )
                         }
                     }
                 }
 
                 // Info Section
-                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Top
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = product.name,
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
-                            Text(
-                                text = product.category,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color.Gray
-                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Surface(
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                shape = MaterialTheme.shapes.small
+                            ) {
+                                Text(
+                                    text = product.category,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                                )
+                            }
                         }
+                        
                         Text(
-                            text = "$${product.price}",
+                            text = "Rs ${product.price}",
                             style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
 
@@ -364,34 +483,6 @@ fun ProductDetailScreen(
             initialIndex = state.selectedImageIndex,
             onDismiss = { showGallery = false }
         )
-    }
-
-    // Success Animation Dialog
-    if (viewModel.addToCartSuccess.value) {
-        Dialog(onDismissRequest = { viewModel.resetAddToCartSuccess() }) {
-            Box(
-                modifier = Modifier
-                    .size(200.dp)
-                    .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.large),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    OpticalLottieAnimation(
-                        rawRes = R.raw.success,
-                        size = 120.dp,
-                        iterations = 1
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("Added to Cart!", fontWeight = FontWeight.Bold)
-                }
-            }
-        }
-        
-        // Auto-dismiss after 2 seconds
-        LaunchedEffect(key1 = true) {
-            delay(2000)
-            viewModel.resetAddToCartSuccess()
-        }
     }
 }
 @Composable
@@ -570,29 +661,37 @@ fun ZoomableImage(imageUrl: String) {
 
 @Composable
 fun ReviewItem(review: com.opticalshop.domain.model.Review) {
-    Column(
+    Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f), MaterialTheme.shapes.medium)
-            .padding(12.dp)
+            .fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-            Text(text = review.userName, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-            Text(text = java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault()).format(java.util.Date(review.timestamp)), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-        }
-        Spacer(modifier = Modifier.height(4.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            repeat(5) { index ->
-                Icon(
-                    imageVector = Icons.Default.Star,
-                    contentDescription = null,
-                    tint = if (index < review.rating.toInt()) com.opticalshop.presentation.theme.StarYellow else Color.Gray.copy(alpha = 0.3f),
-                    modifier = Modifier.size(16.dp)
-                )
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                Text(text = review.userName, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                Text(text = java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault()).format(java.util.Date(review.timestamp)), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
             }
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                repeat(5) { index ->
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = null,
+                        tint = if (index < review.rating.toInt()) com.opticalshop.presentation.theme.StarYellow else Color.LightGray,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = review.comment, 
+                style = MaterialTheme.typography.bodyMedium,
+                lineHeight = 22.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(text = review.comment, style = MaterialTheme.typography.bodyMedium)
     }
 }
 

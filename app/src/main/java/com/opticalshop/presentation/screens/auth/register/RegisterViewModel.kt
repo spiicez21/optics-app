@@ -45,6 +45,15 @@ class RegisterViewModel @Inject constructor(
     private val _password = mutableStateOf("")
     val password: State<String> = _password
 
+    private val _phoneNumber = mutableStateOf("")
+    val phoneNumber: State<String> = _phoneNumber
+
+    private val _gender = mutableStateOf("")
+    val gender: State<String> = _gender
+
+    private val _age = mutableStateOf("")
+    val age: State<String> = _age
+
     private val _state = mutableStateOf<Result<Unit>?>(null)
     val state: State<Result<Unit>?> = _state
 
@@ -63,10 +72,36 @@ class RegisterViewModel @Inject constructor(
         _password.value = newValue
     }
 
+    fun onPhoneChange(newValue: String) {
+        _phoneNumber.value = newValue
+    }
+
+    fun onGenderChange(newValue: String) {
+        _gender.value = newValue
+    }
+
+    fun onAgeChange(newValue: String) {
+        _age.value = newValue
+    }
+
     fun register() {
+        if (name.value.isBlank() || email.value.isBlank() || password.value.isBlank() || phoneNumber.value.isBlank() || gender.value.isBlank() || age.value.isBlank()) {
+            viewModelScope.launch {
+                _eventFlow.emit(UiEvent.ShowError("Please fill all fields"))
+            }
+            return
+        }
+
         viewModelScope.launch {
             _state.value = Result.Loading
-            when (val result = registerUseCase(email.value, password.value, name.value)) {
+            when (val result = registerUseCase(
+                email = email.value,
+                pass = password.value,
+                name = name.value,
+                phoneNumber = phoneNumber.value,
+                gender = gender.value,
+                age = age.value
+            )) {
                 is Result.Success -> {
                     _state.value = Result.Success(Unit)
                     _eventFlow.emit(UiEvent.NavigateToHome)

@@ -78,7 +78,7 @@ fun CartItemCard(
                 }
                 
                 Text(
-                    text = "$${cartItem.price}",
+                    text = "Rs ${cartItem.price}",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.secondary,
                     fontWeight = FontWeight.Bold

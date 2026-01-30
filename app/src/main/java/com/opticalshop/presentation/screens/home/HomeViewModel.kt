@@ -48,7 +48,7 @@ class HomeViewModel @Inject constructor(
             val user = getCurrentUserUseCase().first()
             _state.value = _state.value.copy(
                 userName = user?.name?.ifBlank { "Guest" } ?: "Guest",
-                profileImageUrl = user?.photoUrl
+                profileImageUrl = user?.getProfileImageUrl()
             )
 
             if (user != null) {
@@ -57,7 +57,7 @@ class HomeViewModel @Inject constructor(
                         if (result is Result.Success) {
                             _state.value = _state.value.copy(
                                 userName = result.data.name.ifBlank { "Guest" },
-                                profileImageUrl = result.data.photoUrl
+                                profileImageUrl = result.data.getProfileImageUrl()
                             )
                         }
                     }

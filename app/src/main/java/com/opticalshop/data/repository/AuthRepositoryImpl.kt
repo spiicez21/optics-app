@@ -55,7 +55,14 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun register(email: String, pass: String, name: String): Result<User> {
+    override suspend fun register(
+        email: String,
+        pass: String,
+        name: String,
+        phoneNumber: String,
+        gender: String,
+        age: String
+    ): Result<User> {
         return try {
             val result = authService.register(email, pass).await()
             val firebaseUser = result.user
@@ -63,7 +70,10 @@ class AuthRepositoryImpl @Inject constructor(
                 val user = User(
                     id = firebaseUser.uid,
                     email = firebaseUser.email ?: "",
-                    displayName = name
+                    displayName = name,
+                    phoneNumber = phoneNumber,
+                    gender = gender,
+                    age = age
                 )
                 firestoreService.saveProfile(user)
                 Result.Success(user)

@@ -129,6 +129,9 @@ fun NavGraph(
             ProductDetailScreen(
                 onNavigateBack = {
                     navController.popBackStack()
+                },
+                onNavigateToCheckout = {
+                    navController.navigate(Screen.Checkout.route)
                 }
             )
         }

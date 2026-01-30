@@ -34,9 +34,9 @@ class MainActivity : ComponentActivity() {
             }
         }
         
-        // Seeding database with 24 products once. 
+        // Seeding database with products.
         // You can comment this out after running the app once.
-        //dataSeeder.seedProducts()
+        dataSeeder.seedProducts()
 
         setContent {
             val isDarkTheme = themeViewModel.isDarkTheme.collectAsState(initial = null).value

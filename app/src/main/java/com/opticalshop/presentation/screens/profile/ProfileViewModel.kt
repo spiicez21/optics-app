@@ -46,6 +46,7 @@ class ProfileViewModel @Inject constructor(
                                 user = result.data,
                                 name = if (result.data.displayName.isNotBlank()) result.data.displayName else firebaseUser.displayName,
                                 email = if (result.data.email.isNotBlank()) result.data.email else firebaseUser.email,
+                                profileImageUrl = result.data.getProfileImageUrl(),
                                 isLoading = false,
                                 error = null
                             )

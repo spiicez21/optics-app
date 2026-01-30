@@ -1,16 +1,22 @@
 package com.opticalshop.presentation.screens.personal_info
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.opticalshop.presentation.components.OpticalButton
@@ -52,68 +58,167 @@ fun PersonalInfoScreen(
         }
     ) { padding ->
         Box(modifier = Modifier.padding(padding).fillMaxSize()) {
-            if (state.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            } else {
-                Column(
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Modern Form Card
+                Surface(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(24.dp)
-                        .verticalScroll(rememberScrollState()),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    shape = MaterialTheme.shapes.large,
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 2.dp,
+                    shadowElevation = 4.dp
                 ) {
-                    Spacer(modifier = Modifier.height(24.dp))
-                    
-                    OpticalTextField(
-                        value = state.name,
-                        onValueChange = viewModel::onNameChange,
-                        label = "Full Name",
-                        placeholder = "Enter your full name"
-                    )
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    OpticalTextField(
-                        value = state.email,
-                        onValueChange = {},
-                        label = "Email Address",
-                        enabled = false,
-                        placeholder = ""
-                    )
-                    Text(
-                        text = "Email cannot be changed",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
-                    )
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    OpticalTextField(
-                        value = state.phoneNumber,
-                        onValueChange = viewModel::onPhoneChange,
-                        label = "Phone Number",
-                        placeholder = "Enter your phone number"
-                    )
-                    
-                    Spacer(modifier = Modifier.height(48.dp))
-                    
-                    OpticalButton(
-                        text = if (state.isUpdating) "Updating..." else "Save Changes",
-                        onClick = viewModel::updateProfile,
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !state.isUpdating
-                    )
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                    ) {
+                        InfoInputField(
+                            label = "Full Name",
+                            value = state.name,
+                            onValueChange = viewModel::onNameChange,
+                            icon = Icons.Default.Person,
+                            placeholder = "Enter your full name"
+                        )
+
+                        InfoInputField(
+                            label = "Email Address",
+                            value = state.email,
+                            onValueChange = {},
+                            icon = Icons.Default.Email,
+                            enabled = false,
+                            helperText = "Email cannot be changed"
+                        )
+
+                        InfoInputField(
+                            label = "Phone Number",
+                            value = state.phoneNumber,
+                            onValueChange = viewModel::onPhoneChange,
+                            icon = Icons.Default.Phone,
+                            placeholder = "Enter your phone number",
+                            keyboardType = KeyboardType.Phone
+                        )
+
+                        // Gender Selection
+                        Column {
+                            Text(
+                                text = "Gender",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                              ) {
+                                listOf("Male", "Female", "Other").forEach { gender ->
+                                    val isSelected = state.gender == gender
+                                    Surface(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(44.dp)
+                                            .clickable { viewModel.onGenderChange(gender) },
+                                        shape = MaterialTheme.shapes.medium,
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                                        contentColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+                                        border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Text(text = gender, style = MaterialTheme.typography.labelLarge, fontWeight = if(isSelected) FontWeight.Bold else FontWeight.Normal)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        InfoInputField(
+                            label = "Age",
+                            value = state.age,
+                            onValueChange = { if (it.all { char -> char.isDigit() } && it.length <= 3) viewModel.onAgeChange(it) },
+                            icon = Icons.Default.DateRange,
+                            placeholder = "Enter your age",
+                            keyboardType = KeyboardType.Number
+                        )
+                    }
                 }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                OpticalButton(
+                    text = if (state.isUpdating) "Updating Profile..." else "Save Changes",
+                    onClick = viewModel::updateProfile,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .height(56.dp),
+                    enabled = !state.isUpdating
+                )
+
+                Spacer(modifier = Modifier.height(40.dp))
             }
 
-            if (state.error != null) {
-                Text(
-                    text = state.error,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(24.dp)
-                )
+            if (state.isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                }
             }
+        }
+    }
+}
+
+@Composable
+fun InfoInputField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    icon: ImageVector,
+    placeholder: String = "",
+    enabled: Boolean = true,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    helperText: String? = null
+) {
+    Column {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        OpticalTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = "",
+            placeholder = placeholder,
+            enabled = enabled,
+            leadingIcon = @Composable {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = if (enabled) MaterialTheme.colorScheme.primary else Color.Gray,
+                    modifier = Modifier.size(20.dp)
+                )
+            },
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType)
+        )
+        if (helperText != null) {
+            Text(
+                text = helperText,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray,
+                modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+            )
         }
     }
 }

@@ -16,12 +16,17 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
+import coil.compose.AsyncImage
 import com.opticalshop.presentation.components.CategoryChip
 import com.opticalshop.presentation.components.ProductCard
 import com.opticalshop.presentation.components.OpticalTextField
+import com.opticalshop.presentation.theme.PremiumOrangeStart
 
 import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -216,14 +221,14 @@ fun HomeHeader(
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .padding(16.dp),
+            .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Surface(
-            modifier = Modifier.size(48.dp).clickable { onProfileClick() },
-            shape = androidx.compose.foundation.shape.CircleShape,
-            color = MaterialTheme.colorScheme.surfaceVariant,
-            contentColor = MaterialTheme.colorScheme.primary // Set default content color
+            modifier = Modifier.size(52.dp).clickable { onProfileClick() },
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surface,
+            shadowElevation = 4.dp
         ) {
             if (profileImageUrl != null) {
                 coil.compose.AsyncImage(
@@ -234,44 +239,69 @@ fun HomeHeader(
                 )
             } else {
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                    // Show Icon if Guest, otherwise show initial
                     if (userName != "Guest" && userName.isNotBlank()) {
                         Text(
                             text = userName.take(1).uppercase(),
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
                         )
                     } else {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = "Profile",
-                            modifier = Modifier.size(28.dp).padding(4.dp)
+                            modifier = Modifier.size(28.dp),
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
             }
         }
         
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(16.dp))
         
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = "Hello $userName", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-            Text(text = greeting, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(
+                text = "Hello, $userName 👋", 
+                style = MaterialTheme.typography.bodyMedium, 
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+            )
+            Text(
+                text = greeting, 
+                style = MaterialTheme.typography.titleLarge, 
+                fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
         }
         
-        IconButton(onClick = onThemeToggle) {
-             Icon(
-                 imageVector = if (isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
-                 contentDescription = "Toggle Theme",
-                 tint = Color.Gray
-             )
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+            modifier = Modifier.size(40.dp)
+        ) {
+            IconButton(onClick = onThemeToggle) {
+                 Icon(
+                     imageVector = if (isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
+                     contentDescription = "Toggle Theme",
+                     modifier = Modifier.size(20.dp)
+                 )
+            }
         }
 
-        IconButton(onClick = onNotificationClick) {
-            Icon(imageVector = Icons.Default.Notifications, contentDescription = null, tint = Color.Gray)
-        }
-        
-        IconButton(onClick = onCartClick) {
-            Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = null, tint = Color.Gray)
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+            modifier = Modifier.size(40.dp)
+        ) {
+            IconButton(onClick = onCartClick) {
+                Icon(
+                    imageVector = Icons.Default.ShoppingCart, 
+                    contentDescription = null, 
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
     }
 }
@@ -299,37 +329,63 @@ fun PromoBanner() {
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .height(160.dp),
+            .height(180.dp),
         shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // In a real app, use an image background
-            Column(
+            AsyncImage(
+                model = "file:///C:/Users/spicez/.gemini/antigravity/brain/b16cff9a-7e0a-4b4b-a8bc-0e1eba8cfede/eyewear_promo_banner_1769775053605.png",
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+            
+            // Glassmorphism Overlay
+            Box(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .padding(16.dp)
-                    .width(180.dp),
-                verticalArrangement = Arrangement.Center
+                    .width(220.dp)
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                Color.Black.copy(alpha = 0.6f),
+                                Color.Transparent
+                            )
+                        )
+                    )
+                    .padding(24.dp),
+                contentAlignment = Alignment.CenterStart
             ) {
-                Text(
-                    text = "Get Your Special Sale Up to 40%",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Button(
-                    onClick = { /* Handle */ },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = MaterialTheme.colorScheme.primary),
-                    shape = androidx.compose.foundation.shape.CircleShape,
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
-                ) {
-                    Text(text = "Shop Now", style = MaterialTheme.typography.labelLarge)
+                Column(verticalArrangement = Arrangement.Center) {
+                    Text(
+                        text = "Special Sale",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = PremiumOrangeStart,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Get Your Style Up to 40% Off",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = Color.White,
+                        fontWeight = FontWeight.ExtraBold,
+                        lineHeight = 28.sp
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { /* Handle */ },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = PremiumOrangeStart,
+                            contentColor = Color.White
+                        ),
+                        shape = MaterialTheme.shapes.medium,
+                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
+                    ) {
+                        Text(text = "Shop Now", style = MaterialTheme.typography.labelLarge)
+                    }
                 }
             }
-            
-            // Add a placeholder image or graphic here
         }
     }
 }

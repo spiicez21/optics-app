@@ -113,14 +113,23 @@ class ProductDetailViewModel @Inject constructor(
     fun onAddChange(value: String) { _state.value = _state.value.copy(add = value) }
     fun onPdChange(value: String) { _state.value = _state.value.copy(pupillaryDistance = value) }
 
-    private val _addToCartSuccess = mutableStateOf(false)
-    val addToCartSuccess: State<Boolean> = _addToCartSuccess
+    private val _navigateToCheckout = mutableStateOf(false)
+    val navigateToCheckout: State<Boolean> = _navigateToCheckout
 
-    fun resetAddToCartSuccess() {
-        _addToCartSuccess.value = false
+    private val _snackbarMessage = mutableStateOf<String?>(null)
+    val snackbarMessage: State<String?> = _snackbarMessage
+
+    fun resetNavigateToCheckout() { _navigateToCheckout.value = false }
+    fun resetSnackbarMessage() { _snackbarMessage.value = null }
+
+    fun buyNow() {
+        viewModelScope.launch {
+            addToCart(silent = true)
+            _navigateToCheckout.value = true
+        }
     }
 
-    fun addToCart() {
+    fun addToCart(silent: Boolean = false) {
         val product = _state.value.product ?: return
         viewModelScope.launch {
             val user = getCurrentUserUseCase().first()
@@ -153,7 +162,10 @@ class ProductDetailViewModel @Inject constructor(
                     lensOptions = lensOptions
                 )
                 addToCartUseCase(user.id, cartItem)
-                _addToCartSuccess.value = true
+                
+                if (!silent) {
+                    _snackbarMessage.value = "Added to Cart!"
+                }
             }
         }
     }

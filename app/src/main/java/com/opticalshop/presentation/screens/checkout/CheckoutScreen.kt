@@ -71,7 +71,7 @@ fun CheckoutScreen(
                     Column(modifier = Modifier.weight(1f)) {
                         Text("Total Amount", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
                         Text(
-                            "$${String.format("%.2f", state.totalAmount)}",
+                            "Rs ${String.format("%.2f", state.totalAmount)}",
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -309,7 +309,7 @@ fun SummaryStep(viewModel: CheckoutViewModel) {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text("${item.productName} (x${item.quantity})", modifier = Modifier.weight(1f), color = Color.Gray)
-                        Text("$${String.format("%.2f", item.price * item.quantity)}", fontWeight = FontWeight.Bold)
+                        Text("Rs ${String.format("%.2f", item.price * item.quantity)}", fontWeight = FontWeight.Bold)
                     }
                 }
             }

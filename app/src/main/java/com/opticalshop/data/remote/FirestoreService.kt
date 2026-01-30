@@ -148,6 +148,24 @@ class FirestoreService @Inject constructor(
         }.await()
     }
 
+    suspend fun clearProducts() {
+        val snapshot = firestore.collection(Constants.PRODUCTS_COLLECTION).get().await()
+        firestore.runBatch { batch ->
+            for (doc in snapshot.documents) {
+                batch.delete(doc.reference)
+            }
+        }.await()
+    }
+
+    suspend fun clearCategories() {
+        val snapshot = firestore.collection(Constants.CATEGORIES_COLLECTION).get().await()
+        firestore.runBatch { batch ->
+            for (doc in snapshot.documents) {
+                batch.delete(doc.reference)
+            }
+        }.await()
+    }
+
     fun getOrders(userId: String): Flow<List<Order>> = callbackFlow {
         val subscription = firestore.collection(Constants.USERS_COLLECTION)
             .document(userId)

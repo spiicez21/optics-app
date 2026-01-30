@@ -163,7 +163,7 @@ fun OrderItemRow(item: com.opticalshop.data.model.CartItem) {
             }
         }
         Text(
-            text = "$${String.format("%.2f", item.price * item.quantity)}",
+            text = "Rs ${String.format("%.2f", item.price * item.quantity)}",
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold
         )
@@ -179,7 +179,7 @@ fun PriceBreakdown(order: com.opticalshop.data.model.Order) {
         ) {
             Text(text = "Total Amount", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text(
-                text = "$${String.format("%.2f", order.totalAmount)}",
+                text = "Rs ${String.format("%.2f", order.totalAmount)}",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold

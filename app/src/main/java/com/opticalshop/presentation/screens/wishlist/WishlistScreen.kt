@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
@@ -55,15 +56,32 @@ fun WishlistScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Icon(
-                        Icons.Default.Favorite,
-                        contentDescription = null,
-                        modifier = Modifier.size(100.dp),
-                        tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("Your wishlist is empty", style = MaterialTheme.typography.titleLarge, color = Color.Gray)
+                    Surface(
+                        modifier = Modifier.size(120.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Default.Favorite,
+                                contentDescription = null,
+                                modifier = Modifier.size(60.dp),
+                                tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text("Your wishlist is empty", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     Text("Save items you love here!", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                    
+                    Spacer(modifier = Modifier.height(32.dp))
+                    
+                    Button(
+                        onClick = onNavigateBack,
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Text("Start Shopping")
+                    }
                 }
             } else {
                 LazyVerticalGrid(
@@ -85,18 +103,17 @@ fun WishlistScreen(
                 }
             }
 
-            // Bottom Fade Overlay
+            // Bottom Fade Overlay for smooth scrolling end
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(120.dp)
+                    .height(60.dp)
                     .align(Alignment.BottomCenter)
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
                                 Color.Transparent,
-                                MaterialTheme.colorScheme.background.copy(alpha = 0.5f),
-                                MaterialTheme.colorScheme.background.copy(alpha = 0.8f),
+                                MaterialTheme.colorScheme.background.copy(alpha = 0.7f),
                                 MaterialTheme.colorScheme.background
                             )
                         )
@@ -104,11 +121,11 @@ fun WishlistScreen(
             )
 
             if (state.error != null) {
-                Text(
-                    text = state.error,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp)
-                )
+                Snackbar(
+                    modifier = Modifier.align(Alignment.BottomCenter).padding(24.dp)
+                ) {
+                    Text(text = state.error)
+                }
             }
         }
     }
