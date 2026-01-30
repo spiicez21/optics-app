@@ -84,72 +84,71 @@ fun CartScreen(
                     contentPadding = PaddingValues(bottom = 250.dp, start = 16.dp, end = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    items(state.cartItems) { item ->
-                        CartItemCard(
-                            cartItem = item,
-                            onIncrease = { viewModel.updateQuantity(item.productId, item.quantity + 1) },
-                            onDecrease = { viewModel.updateQuantity(item.productId, item.quantity - 1) },
-                            onRemove = { viewModel.removeItem(item.productId) }
-                        )
-                    }
+                items(state.cartItems) { item ->
+                    CartItemCard(
+                        cartItem = item,
+                        onIncrease = { viewModel.updateQuantity(item.productId, item.quantity + 1) },
+                        onDecrease = { viewModel.updateQuantity(item.productId, item.quantity - 1) },
+                        onRemove = { viewModel.removeItem(item.productId) }
+                    )
                 }
+            }
 
-                // Bottom Fade Overlay
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                        .align(Alignment.BottomCenter)
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    MaterialTheme.colorScheme.background.copy(alpha = 0.5f),
-                                    MaterialTheme.colorScheme.background.copy(alpha = 0.9f),
-                                    MaterialTheme.colorScheme.background
-                                )
+            // Bottom Fade Overlay
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .align(Alignment.BottomCenter)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                MaterialTheme.colorScheme.background.copy(alpha = 0.5f),
+                                MaterialTheme.colorScheme.background.copy(alpha = 0.9f),
+                                MaterialTheme.colorScheme.background
                             )
                         )
-                )
+                    )
+            )
 
-                // Floating Checkout Section
-                if (state.cartItems.isNotEmpty()) {
-                    Card(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(horizontal = 16.dp, vertical = 16.dp)
-                            .fillMaxWidth(),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            // Floating Checkout Section
+            if (state.cartItems.isNotEmpty()) {
+                Card(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(horizontal = 16.dp, vertical = 16.dp)
+                        .fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp)
                     ) {
-                        Column(
-                            modifier = Modifier.padding(20.dp)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "Total",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = Color.Gray
-                                )
-                                Text(
-                                    text = "$${String.format("%.2f", state.totalAmount)}",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(16.dp))
-                            OpticalButton(
-                                text = "Proceed to Checkout",
-                                onClick = onCheckoutClick,
-                                modifier = Modifier.fillMaxWidth()
+                            Text(
+                                text = "Total",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color.Gray
+                            )
+                            Text(
+                                text = "$${String.format("%.2f", state.totalAmount)}",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
                             )
                         }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        OpticalButton(
+                            text = "Proceed to Checkout",
+                            onClick = onCheckoutClick,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             }
@@ -163,4 +162,5 @@ fun CartScreen(
             }
         }
     }
+}
 }
