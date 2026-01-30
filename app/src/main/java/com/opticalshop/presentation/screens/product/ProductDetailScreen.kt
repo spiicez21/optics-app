@@ -320,10 +320,41 @@ fun ProductDetailScreen(
                         PrescriptionForm(state, viewModel)
                     }
 
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    // Reviews Section
+                    Text(text = "Reviews", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    if (state.reviews.isEmpty()) {
+                        Text("No reviews yet. Be the first to review!", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
+                    } else {
+                        state.reviews.forEach { review ->
+                            ReviewItem(review)
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    OutlinedButton(
+                        onClick = { viewModel.toggleReviewDialog() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Write a Review")
+                    }
+
                     Spacer(modifier = Modifier.height(100.dp))
                 }
             }
         }
+    }
+
+    if (state.showReviewDialog) {
+        AddReviewDialog(
+            onDismiss = { viewModel.toggleReviewDialog() },
+            onSubmit = { rating, comment -> viewModel.submitReview(rating, comment) }
+        )
     }
 
 
@@ -535,4 +566,80 @@ fun ZoomableImage(imageUrl: String) {
             contentScale = ContentScale.Fit
         )
     }
+}
+
+@Composable
+fun ReviewItem(review: com.opticalshop.domain.model.Review) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f), MaterialTheme.shapes.medium)
+            .padding(12.dp)
+    ) {
+        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+            Text(text = review.userName, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+            Text(text = java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault()).format(java.util.Date(review.timestamp)), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            repeat(5) { index ->
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = null,
+                    tint = if (index < review.rating.toInt()) com.opticalshop.presentation.theme.StarYellow else Color.Gray.copy(alpha = 0.3f),
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(text = review.comment, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+@Composable
+fun AddReviewDialog(onDismiss: () -> Unit, onSubmit: (Float, String) -> Unit) {
+    var rating by remember { mutableFloatStateOf(0f) }
+    var comment by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Write a Review") },
+        text = {
+            Column {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                    repeat(5) { index ->
+                        Icon(
+                            imageVector = if (index < rating) Icons.Default.Star else Icons.Default.StarBorder,
+                            contentDescription = null,
+                            tint = com.opticalshop.presentation.theme.StarYellow,
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clickable { rating = index + 1f }
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = comment,
+                    onValueChange = { comment = it },
+                    label = { Text("Comment") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onSubmit(rating, comment) },
+                enabled = rating > 0f
+            ) {
+                Text("Submit")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }

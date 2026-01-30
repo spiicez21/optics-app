@@ -10,4 +10,6 @@ interface ProductRepository {
     fun getProductById(productId: String): Flow<Result<Product>>
     fun getCategories(): Flow<Result<List<Category>>>
     fun searchProducts(query: String): Flow<Result<List<Product>>>
+    fun getReviews(productId: String): Flow<Result<List<com.opticalshop.domain.model.Review>>>
+    suspend fun addReview(review: com.opticalshop.domain.model.Review): Result<Unit>
 }

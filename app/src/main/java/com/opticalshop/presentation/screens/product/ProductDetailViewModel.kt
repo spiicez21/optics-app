@@ -22,6 +22,8 @@ class ProductDetailViewModel @Inject constructor(
     private val addToCartUseCase: AddToCartUseCase,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val userRepository: UserRepository,
+    private val getReviewsUseCase: com.opticalshop.domain.usecase.product.GetReviewsUseCase,
+    private val addReviewUseCase: com.opticalshop.domain.usecase.product.AddReviewUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -72,6 +74,7 @@ class ProductDetailViewModel @Inject constructor(
                             product = result.data,
                             isLoading = false
                         )
+                        loadReviews(result.data.id)
                     }
                     is Result.Error -> {
                         _state.value = _state.value.copy(
@@ -153,5 +156,45 @@ class ProductDetailViewModel @Inject constructor(
                 _addToCartSuccess.value = true
             }
         }
+    }
+
+    private fun loadReviews(productId: String) {
+        viewModelScope.launch {
+            getReviewsUseCase(productId).collect { result ->
+                if (result is Result.Success) {
+                    _state.value = _state.value.copy(reviews = result.data)
+                }
+            }
+        }
+    }
+    
+    fun toggleReviewDialog() {
+        _state.value = _state.value.copy(showReviewDialog = !_state.value.showReviewDialog)
+    }
+    
+    fun submitReview(rating: Float, comment: String) {
+         val product = _state.value.product ?: return
+         viewModelScope.launch {
+            val user = getCurrentUserUseCase().first()
+            if (user != null) {
+                val review = com.opticalshop.domain.model.Review(
+                    productId = product.id,
+                    userId = user.id,
+                    userName = user.displayName ?: "User",
+                    rating = rating,
+                    comment = comment
+                )
+                when (addReviewUseCase(review)) {
+                    is Result.Success -> {
+                        _state.value = _state.value.copy(showReviewDialog = false)
+                        loadReviews(product.id)
+                    }
+                    is Result.Error -> {
+                         // internal error handling
+                    }
+                    else -> {}
+                }
+            }
+         }
     }
 }

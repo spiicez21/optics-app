@@ -18,5 +18,7 @@ data class ProductDetailState(
     val cylinder: String = "",
     val axis: String = "",
     val add: String = "",
-    val pupillaryDistance: String = ""
+    val pupillaryDistance: String = "",
+    val reviews: List<com.opticalshop.domain.model.Review> = emptyList(),
+    val showReviewDialog: Boolean = false
 )

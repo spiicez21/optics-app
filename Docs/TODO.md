@@ -17,7 +17,7 @@
 ## Polish & UI (Nice to Have)
 - [x] Pull-to-refresh on product lists
 - [x] Lottie animations for loading/success states
-- [ ] White  Mode Support (Theme refinement)
+- [x] White Mode Support (Theme refinement)
 - [x] Favorites/Wishlist functionality
 
 ## Future Roadmap (Priority 3)

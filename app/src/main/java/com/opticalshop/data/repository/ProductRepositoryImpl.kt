@@ -58,4 +58,22 @@ class ProductRepositoryImpl @Inject constructor(
             .onStart { emit(Result.Loading) }
             .catch { e -> emit(Result.Error(Exception(e))) }
     }
+
+    override fun getReviews(productId: String): Flow<Result<List<com.opticalshop.domain.model.Review>>> {
+        return firestoreService.getReviews(productId)
+            .map { reviews ->
+                Result.Success(reviews) as Result<List<com.opticalshop.domain.model.Review>>
+            }
+            .onStart { emit(Result.Loading) }
+            .catch { e -> emit(Result.Error(Exception(e))) }
+    }
+
+    override suspend fun addReview(review: com.opticalshop.domain.model.Review): Result<Unit> {
+        return try {
+            firestoreService.addReview(review)
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
 }

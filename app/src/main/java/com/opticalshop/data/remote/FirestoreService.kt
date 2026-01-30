@@ -296,4 +296,35 @@ class FirestoreService @Inject constructor(
             .delete()
             .await()
     }
+
+    // Review Operations
+    fun getReviews(productId: String): Flow<List<com.opticalshop.domain.model.Review>> = callbackFlow {
+        val subscription = firestore.collection(Constants.PRODUCTS_COLLECTION)
+            .document(productId)
+            .collection(Constants.REVIEWS_COLLECTION)
+            .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val reviews = snapshot.toObjects(com.opticalshop.domain.model.Review::class.java)
+                    trySend(reviews)
+                }
+            }
+        awaitClose { subscription.remove() }
+    }
+
+    suspend fun addReview(review: com.opticalshop.domain.model.Review) {
+        val reviewId = review.id.ifBlank { UUID.randomUUID().toString() }
+        val finalReview = review.copy(id = reviewId)
+        
+        firestore.collection(Constants.PRODUCTS_COLLECTION)
+            .document(review.productId)
+            .collection(Constants.REVIEWS_COLLECTION)
+            .document(reviewId)
+            .set(finalReview)
+            .await()
+    }
 }
