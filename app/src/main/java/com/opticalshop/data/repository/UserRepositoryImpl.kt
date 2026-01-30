@@ -3,7 +3,7 @@ package com.opticalshop.data.repository
 import com.opticalshop.data.model.Address
 import com.opticalshop.data.remote.FirestoreService
 import com.opticalshop.domain.model.Result
-import com.opticalshop.domain.model.User
+import com.opticalshop.data.model.User
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map

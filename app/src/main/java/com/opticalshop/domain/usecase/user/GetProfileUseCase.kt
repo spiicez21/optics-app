@@ -2,7 +2,7 @@ package com.opticalshop.domain.usecase.user
 
 import com.opticalshop.data.repository.UserRepository
 import com.opticalshop.domain.model.Result
-import com.opticalshop.domain.model.User
+import com.opticalshop.data.model.User
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 

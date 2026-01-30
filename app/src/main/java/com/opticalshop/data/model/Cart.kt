@@ -10,7 +10,10 @@ data class Cart(
 
 data class CartItem(
     val productId: String = "",
-    val quantity: Int = 0,
+    val productName: String = "",
+    val productImageUrl: String = "",
+    val price: Double = 0.0,
+    val quantity: Int = 1,
     val prescriptionData: PrescriptionData? = null,
     val lensOptions: LensOptions? = null,
     @ServerTimestamp

@@ -36,10 +36,10 @@ class CartViewModel @Inject constructor(
                 getCartUseCase(user.id).collect { result ->
                     when (result) {
                         is Result.Success -> {
-                            val items = result.data
-                            val total = items.sumOf { it.price * it.quantity }
+                            val cart = result.data
+                            val total = cart.items.sumOf { it.price * it.quantity }
                             _state.value = _state.value.copy(
-                                cartItems = items,
+                                cartItems = cart.items,
                                 totalAmount = total,
                                 isLoading = false,
                                 error = null

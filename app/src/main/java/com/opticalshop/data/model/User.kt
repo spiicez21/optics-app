@@ -12,14 +12,20 @@ data class User(
     val addresses: List<Address> = emptyList(),
     @ServerTimestamp
     val createdAt: Date? = null
-)
+) {
+    val name: String get() = displayName
+}
 
 data class Address(
     val id: String = "",
     val name: String = "",
     val street: String = "",
+    val streetAddress: String = street, // ALIAS for UI
     val city: String = "",
     val state: String = "",
     val zipCode: String = "",
+    val pincode: String = zipCode, // ALIAS for UI
+    val phoneNumber: String = "",
+    val landmark: String = "",
     val isDefault: Boolean = false
 )

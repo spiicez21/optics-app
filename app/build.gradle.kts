@@ -4,7 +4,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.gms.google-services")
     id("dagger.hilt.android.plugin")
-    kotlin("kapt")
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -75,7 +75,7 @@ dependencies {
     
     // Hilt
     implementation("com.google.dagger:hilt-android:2.52")
-    kapt("com.google.dagger:hilt-compiler:2.52")
+    ksp("com.google.dagger:hilt-compiler:2.52")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
     
     // Coil for image loading

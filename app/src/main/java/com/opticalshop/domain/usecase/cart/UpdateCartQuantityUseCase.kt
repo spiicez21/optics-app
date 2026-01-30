@@ -8,6 +8,6 @@ class UpdateCartQuantityUseCase @Inject constructor(
     private val cartRepository: CartRepository
 ) {
     suspend operator fun invoke(userId: String, productId: String, quantity: Int): Result<Unit> {
-        return cartRepository.updateCartQuantity(userId, productId, quantity)
+        return cartRepository.updateQuantity(userId, productId, quantity)
     }
 }

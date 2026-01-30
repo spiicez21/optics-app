@@ -6,7 +6,7 @@ import com.opticalshop.data.model.CartItem
 import com.opticalshop.data.model.Category
 import com.opticalshop.data.model.Order
 import com.opticalshop.data.model.Product
-import com.opticalshop.domain.model.User
+import com.opticalshop.data.model.User
 import com.opticalshop.utils.Constants
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow

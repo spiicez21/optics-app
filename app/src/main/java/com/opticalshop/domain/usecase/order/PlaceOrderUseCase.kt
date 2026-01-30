@@ -8,7 +8,7 @@ import javax.inject.Inject
 class PlaceOrderUseCase @Inject constructor(
     private val orderRepository: OrderRepository
 ) {
-    suspend operator fun invoke(userId: String, order: Order): Result<Unit> {
-        return orderRepository.placeOrder(userId, order)
+    suspend operator fun invoke(order: Order): Result<String> {
+        return orderRepository.placeOrder(order)
     }
 }

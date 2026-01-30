@@ -35,7 +35,7 @@ fun CartItemCard(
             modifier = Modifier
                 .padding(8.dp)
                 .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterHorizontally
+            verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
                 model = cartItem.productImageUrl,

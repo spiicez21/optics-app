@@ -27,9 +27,9 @@ class ProductRepositoryImpl @Inject constructor(
         return firestoreService.getProductById(productId)
             .map { product ->
                 if (product != null) {
-                    Result.Success(product)
+                    Result.Success(product) as Result<Product>
                 } else {
-                    Result.Error(Exception("Product not found"))
+                    Result.Error(Exception("Product not found")) as Result<Product>
                 }
             }
             .onStart { emit(Result.Loading) }
@@ -53,7 +53,7 @@ class ProductRepositoryImpl @Inject constructor(
                     it.name.contains(query, ignoreCase = true) || 
                     it.brand.contains(query, ignoreCase = true) 
                 }
-                Result.Success(filtered)
+                Result.Success(filtered) as Result<List<Product>>
             }
             .onStart { emit(Result.Loading) }
             .catch { e -> emit(Result.Error(Exception(e))) }

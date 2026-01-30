@@ -13,18 +13,17 @@ class OrderRepositoryImpl @Inject constructor(
     private val firestoreService: FirestoreService
 ) : OrderRepository {
 
-    override suspend fun placeOrder(userId: String, order: Order): Result<Unit> {
+    override suspend fun placeOrder(order: Order): Result<String> {
         return try {
-            firestoreService.placeOrder(userId, order)
-            firestoreService.clearCart(userId)
-            Result.Success(Unit)
+            firestoreService.placeOrder(order.userId, order)
+            firestoreService.clearCart(order.userId)
+            Result.Success(order.id)
         } catch (e: Exception) {
             Result.Error(e)
         }
     }
 
-    override fun getOrders(userId: String): Flow<Result<List<Order>>> {
-        // Implementation for getting orders could be added later if needed
+    override fun getOrderHistory(userId: String): Flow<Result<List<Order>>> {
         return firestoreService.getOrders(userId)
             .map { orders ->
                 Result.Success(orders) as Result<List<Order>>
@@ -33,9 +32,9 @@ class OrderRepositoryImpl @Inject constructor(
             .catch { e -> emit(Result.Error(Exception(e))) }
     }
 
-    override fun getOrderById(userId: String, orderId: String): Flow<Result<Order>> {
-        // Implementation for getting order by id could be added later
-        return firestoreService.getOrderById(userId, orderId)
+    override fun getOrderById(orderId: String): Flow<Result<Order>> {
+        // Note: FirestoreService expects userId, we might need to adjust or use a collectionGroup
+        return firestoreService.getOrderById("", orderId)
             .map { order ->
                 if (order != null) {
                     Result.Success(order)

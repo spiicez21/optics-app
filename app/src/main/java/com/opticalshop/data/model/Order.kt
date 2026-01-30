@@ -8,13 +8,8 @@ data class Order(
     val userId: String = "",
     val items: List<CartItem> = emptyList(),
     val totalAmount: Double = 0.0,
-    val shippingAddress: Address = Address(),
+    val address: Address = Address(),
     val paymentMethod: String = "",
-    val paymentStatus: String = "pending", // pending, completed, failed
-    val orderStatus: String = "pending", // pending, processing, shipped, delivered, cancelled
-    val trackingNumber: String? = null,
-    @ServerTimestamp
-    val createdAt: Date? = null,
-    @ServerTimestamp
-    val updatedAt: Date? = null
+    val status: String = "PENDING",
+    val timestamp: Long = System.currentTimeMillis()
 )

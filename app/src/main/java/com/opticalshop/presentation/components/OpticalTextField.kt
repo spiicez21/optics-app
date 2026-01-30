@@ -24,7 +24,8 @@ fun OpticalTextField(
     isError: Boolean = false,
     errorMessage: String? = null,
     visualTransformation: VisualTransformation = VisualTransformation.None,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    enabled: Boolean = true
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
@@ -37,6 +38,7 @@ fun OpticalTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
+            enabled = enabled,
             placeholder = { Text(text = placeholder) },
             isError = isError,
             visualTransformation = visualTransformation,

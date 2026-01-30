@@ -1,6 +1,6 @@
 package com.opticalshop.presentation.screens.profile
 
-import com.opticalshop.domain.model.User
+import com.opticalshop.data.model.User
 
 data class ProfileState(
     val user: User? = null,

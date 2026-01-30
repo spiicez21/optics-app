@@ -5,6 +5,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.opticalshop.data.model.Address
+import com.opticalshop.data.model.Cart
+import com.opticalshop.data.model.CartItem
 import com.opticalshop.data.model.Order
 import com.opticalshop.domain.model.Result
 import com.opticalshop.domain.usecase.auth.GetCurrentUserUseCase
@@ -36,10 +38,10 @@ class CheckoutViewModel @Inject constructor(
             if (user != null) {
                 getCartUseCase(user.id).collect { result ->
                     if (result is Result.Success) {
-                        val items = result.data
-                        val total = items.sumOf { it.price * it.quantity }
+                        val cart = result.data
+                        val total = cart.items.sumOf { it.price * it.quantity }
                         _state.value = _state.value.copy(
-                            cartItems = items,
+                            cartItems = cart.items,
                             totalAmount = total
                         )
                     }
@@ -122,7 +124,7 @@ class CheckoutViewModel @Inject constructor(
                     timestamp = System.currentTimeMillis()
                 )
                 
-                when (val result = placeOrderUseCase(user.id, order)) {
+                when (val result = placeOrderUseCase(order)) {
                     is Result.Success -> {
                         _state.value = _state.value.copy(
                             isLoading = false,

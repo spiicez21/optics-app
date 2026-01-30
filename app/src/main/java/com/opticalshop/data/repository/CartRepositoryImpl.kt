@@ -1,5 +1,6 @@
 package com.opticalshop.data.repository
 
+import com.opticalshop.data.model.Cart
 import com.opticalshop.data.model.CartItem
 import com.opticalshop.data.remote.FirestoreService
 import com.opticalshop.domain.model.Result
@@ -13,25 +14,25 @@ class CartRepositoryImpl @Inject constructor(
     private val firestoreService: FirestoreService
 ) : CartRepository {
 
-    override fun getCartItems(userId: String): Flow<Result<List<CartItem>>> {
+    override fun getCart(userId: String): Flow<Result<Cart>> {
         return firestoreService.getCartItems(userId)
             .map { items ->
-                Result.Success(items) as Result<List<CartItem>>
+                Result.Success(Cart(userId, items)) as Result<Cart>
             }
             .onStart { emit(Result.Loading) }
             .catch { e -> emit(Result.Error(Exception(e))) }
     }
 
-    override suspend fun addToCart(userId: String, cartItem: CartItem): Result<Unit> {
+    override suspend fun addToCart(userId: String, item: CartItem): Result<Unit> {
         return try {
-            firestoreService.addToCart(userId, cartItem)
+            firestoreService.addToCart(userId, item)
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Error(e)
         }
     }
 
-    override suspend fun updateCartQuantity(userId: String, productId: String, quantity: Int): Result<Unit> {
+    override suspend fun updateQuantity(userId: String, productId: String, quantity: Int): Result<Unit> {
         return try {
             firestoreService.updateCartQuantity(userId, productId, quantity)
             Result.Success(Unit)
