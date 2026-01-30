@@ -65,6 +65,7 @@ dependencies {
     // Lifecycle
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    implementation("androidx.activity:activity-ktx:1.8.2")
     
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:33.1.2"))

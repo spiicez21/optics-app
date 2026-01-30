@@ -11,12 +11,16 @@ import androidx.navigation.compose.rememberNavController
 import com.opticalshop.presentation.navigation.NavGraph
 import com.opticalshop.presentation.theme.OpticalShopTheme
 import dagger.hilt.android.AndroidEntryPoint
+import androidx.activity.viewModels
+import androidx.compose.runtime.collectAsState
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     
     @javax.inject.Inject
     lateinit var dataSeeder: com.opticalshop.utils.DataSeeder
+
+    private val themeViewModel: ThemeViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,7 +39,10 @@ class MainActivity : ComponentActivity() {
         //dataSeeder.seedProducts()
 
         setContent {
-            OpticalShopTheme {
+            val isDarkTheme = themeViewModel.isDarkTheme.collectAsState(initial = null).value
+            val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
+            
+            OpticalShopTheme(darkTheme = isDarkTheme ?: systemDark) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

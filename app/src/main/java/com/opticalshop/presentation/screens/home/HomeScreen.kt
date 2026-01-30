@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -25,6 +26,7 @@ import com.opticalshop.presentation.components.OpticalTextField
 import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.runtime.collectAsState
 
 // ...
 
@@ -34,32 +36,28 @@ fun HomeScreen(
     onProductClick: (String) -> Unit,
     onCartClick: () -> Unit,
     onProfileClick: () -> Unit,
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
+    themeViewModel: com.opticalshop.presentation.ThemeViewModel = hiltViewModel()
 ) {
     val state = viewModel.state.value
-    
+    val isDarkTheme = themeViewModel.isDarkTheme.collectAsState(initial = null).value 
+        ?: androidx.compose.foundation.isSystemInDarkTheme()
+
     val pullRefreshState = rememberPullToRefreshState()
-    if (pullRefreshState.isRefreshing) {
-        viewModel.refresh()
-        // Simple way to stop refreshing when not loading, though ideal is tied to state
-        if (!state.isLoading) pullRefreshState.endRefresh() 
-        // Note: For production, better sync is needed, but this works for basic integration
-    }
-    // Sync state isRefreshing with VM isLoading isn't direct with M3 APIs sometimes
-    // But let's use the basic pattern
     
-    // Better pattern:
-    /* 
-       LaunchedEffect(state.isLoading) {
-           if (!state.isLoading) pullRefreshState.endRefresh()
-       }
-    */
-    LaunchedEffect(state.isLoading) {
-        if (!state.isLoading) {
-             pullRefreshState.endRefresh()
+    // Trigger refresh when user pulls
+    LaunchedEffect(pullRefreshState.isRefreshing) {
+        if (pullRefreshState.isRefreshing) {
+            viewModel.refresh()
         }
     }
 
+    // End refresh when loading is finished
+    LaunchedEffect(state.isLoading) {
+        if (!state.isLoading && pullRefreshState.isRefreshing) {
+            pullRefreshState.endRefresh()
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).nestedScroll(pullRefreshState.nestedScrollConnection)) {
         LazyColumn(
@@ -73,7 +71,9 @@ fun HomeScreen(
                     profileImageUrl = state.profileImageUrl,
                     onProfileClick = onProfileClick,
                     onNotificationClick = { /* Handle */ },
-                    onCartClick = onCartClick
+                    onCartClick = onCartClick,
+                    isDarkTheme = isDarkTheme,
+                    onThemeToggle = { themeViewModel.toggleTheme(isDarkTheme) }
                 )
             }
 
@@ -152,7 +152,7 @@ fun HomeScreen(
                 }
             }
 
-            if (state.isLoading && state.categories.isEmpty() && state.popularProducts.isEmpty()) {
+            if (state.isLoading && state.categories.isEmpty() && state.popularProducts.isEmpty() && !pullRefreshState.isRefreshing) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
 
@@ -182,10 +182,13 @@ fun HomeScreen(
                 )
         )
         
-        PullToRefreshContainer(
-            state = pullRefreshState,
-            modifier = Modifier.align(Alignment.TopCenter)
-        )
+        // Show PullToRefresh indicator only when active (progress > 0 or refreshing)
+        if (pullRefreshState.progress > 0 || pullRefreshState.isRefreshing) {
+            PullToRefreshContainer(
+                state = pullRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
+        }
     }
 }
 
@@ -195,8 +198,20 @@ fun HomeHeader(
     profileImageUrl: String?,
     onProfileClick: () -> Unit,
     onNotificationClick: () -> Unit,
-    onCartClick: () -> Unit
+    onCartClick: () -> Unit,
+    isDarkTheme: Boolean,
+    onThemeToggle: () -> Unit
 ) {
+    val greeting = remember {
+        val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+        when (hour) {
+            in 5..11 -> "Good Morning!"
+            in 12..16 -> "Good Afternoon!"
+            in 17..23 -> "Good Evening!"
+            else -> "Hello!"
+        }
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -207,7 +222,8 @@ fun HomeHeader(
         Surface(
             modifier = Modifier.size(48.dp).clickable { onProfileClick() },
             shape = androidx.compose.foundation.shape.CircleShape,
-            color = MaterialTheme.colorScheme.surfaceVariant
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.primary // Set default content color
         ) {
             if (profileImageUrl != null) {
                 coil.compose.AsyncImage(
@@ -217,8 +233,20 @@ fun HomeHeader(
                     contentScale = androidx.compose.ui.layout.ContentScale.Crop
                 )
             } else {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(userName.take(1).uppercase(), style = MaterialTheme.typography.titleMedium)
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    // Show Icon if Guest, otherwise show initial
+                    if (userName != "Guest" && userName.isNotBlank()) {
+                        Text(
+                            text = userName.take(1).uppercase(),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Profile",
+                            modifier = Modifier.size(28.dp).padding(4.dp)
+                        )
+                    }
                 }
             }
         }
@@ -227,9 +255,17 @@ fun HomeHeader(
         
         Column(modifier = Modifier.weight(1f)) {
             Text(text = "Hello $userName", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-            Text(text = "Good Morning!", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(text = greeting, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         }
         
+        IconButton(onClick = onThemeToggle) {
+             Icon(
+                 imageVector = if (isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
+                 contentDescription = "Toggle Theme",
+                 tint = Color.Gray
+             )
+        }
+
         IconButton(onClick = onNotificationClick) {
             Icon(imageVector = Icons.Default.Notifications, contentDescription = null, tint = Color.Gray)
         }

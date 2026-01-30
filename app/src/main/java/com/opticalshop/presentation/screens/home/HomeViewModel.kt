@@ -36,18 +36,32 @@ class HomeViewModel @Inject constructor(
     }
 
     fun refresh() {
+        _state.value = _state.value.copy(isLoading = true)
         getHomeData()
     }
 
+    private var fetchJob: kotlinx.coroutines.Job? = null
+
     private fun getHomeData() {
-        viewModelScope.launch {
+        fetchJob?.cancel()
+        fetchJob = viewModelScope.launch {
             val user = getCurrentUserUseCase().first()
             _state.value = _state.value.copy(
-                userName = user?.name ?: "Guest",
+                userName = user?.name?.ifBlank { "Guest" } ?: "Guest",
                 profileImageUrl = user?.photoUrl
             )
 
             if (user != null) {
+                launch {
+                    userRepository.getProfile(user.id).collect { result ->
+                        if (result is Result.Success) {
+                            _state.value = _state.value.copy(
+                                userName = result.data.name.ifBlank { "Guest" },
+                                profileImageUrl = result.data.photoUrl
+                            )
+                        }
+                    }
+                }
                 launch {
                     userRepository.getWishlist(user.id).collect { result ->
                         if (result is Result.Success) {
@@ -84,7 +98,7 @@ class HomeViewModel @Inject constructor(
                     categories = finalCategories,
                     featuredProducts = products.filter { it.featured },
                     allProducts = allProducts,
-                    popularProducts = allProducts, 
+                    popularProducts = if (_state.value.selectedCategoryId == "all" && _state.value.searchQuery.isBlank()) allProducts else _state.value.popularProducts, // Retain filtering if active, else reset
                     isLoading = isLoading,
                     error = error
                 )
