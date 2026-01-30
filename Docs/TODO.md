@@ -22,5 +22,5 @@
 
 ## Future Roadmap (Priority 3)
 - [ ] Virtual Try-on (AR) integration
-- [ ] Push Notifications for order updates
-- [ ] Product Reviews & Ratings
+- [x] Push Notifications for order updates
+- [x] Product Reviews & Ratings
