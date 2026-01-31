@@ -19,3 +19,8 @@ google-services.json
 build
 mocks
 scripts
+.idea
+.kotlin
+.gradle
+release
+.agent
