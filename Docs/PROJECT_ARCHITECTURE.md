@@ -57,6 +57,23 @@ The following external libraries are used to extend the app's functionality:
 
 ---
 
+## CI/CD Pipeline (GitHub Actions)
+
+The project includes an automated Continuous Integration (CI) pipeline using **GitHub Actions**.
+
+### Workflow: `Android CI`
+- **Trigger**: Runs on every `push` or `pull_request` to the `main` or `develop` branches.
+- **Environment**: Ubuntu Latest.
+- **Java Version**: 17 (Temurin distribution).
+- **Core Steps**:
+    1. **Checkout**: Pulls the source code from the repository.
+    2. **Setup JDK**: Installs Java 17 and sets up Gradle caching for faster builds.
+    3. **Permission**: Grants execution permission to the Gradle wrapper (`gradlew`).
+    4. **Build**: Executes `./gradlew assembleDebug` to ensure the project compiles and builds successfully.
+    5. **Artifacts**: Uploads the generated Debug APK as a build artifact for review.
+
+---
+
 ## Architecture Flow Chart
 
 The following diagram illustrates the interaction between the different layers and packages:
