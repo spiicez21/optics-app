@@ -8,7 +8,11 @@ import javax.inject.Inject
 class LoginWithGoogleUseCase @Inject constructor(
     private val repository: AuthRepository
 ) {
-    suspend operator fun invoke(idToken: String): Result<User> {
-        return repository.loginWithGoogle(idToken)
+    suspend operator fun invoke(
+        idToken: String,
+        displayName: String = "",
+        photoUrl: String = ""
+    ): Result<User> {
+        return repository.loginWithGoogle(idToken, displayName, photoUrl)
     }
 }

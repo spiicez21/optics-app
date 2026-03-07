@@ -33,17 +33,23 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun loginWithGoogle(idToken: String): Result<User> {
+    override suspend fun loginWithGoogle(
+        idToken: String,
+        displayName: String,
+        photoUrl: String
+    ): Result<User> {
         return try {
             val credential = com.google.firebase.auth.GoogleAuthProvider.getCredential(idToken, null)
             val result = authService.signInWithCredential(credential).await()
             val firebaseUser = result.user
             if (firebaseUser != null) {
+                // Prefer data from GoogleSignInAccount (passed in) over Firebase Auth,
+                // as it is fresher and includes the full-size photo URL.
                 val user = User(
                     id = firebaseUser.uid,
                     email = firebaseUser.email ?: "",
-                    displayName = firebaseUser.displayName ?: "",
-                    photoUrl = firebaseUser.photoUrl?.toString() ?: ""
+                    displayName = displayName.ifBlank { firebaseUser.displayName ?: "" },
+                    photoUrl = photoUrl.ifBlank { firebaseUser.photoUrl?.toString() ?: "" }
                 )
                 firestoreService.syncUserOnLogin(user)
                 Result.Success(user)

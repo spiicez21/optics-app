@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products — OpticShop Admin</title>
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+<!-- ── Sidebar ── -->
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">👓</div>
+        <span>OpticShop</span>
+    </div>
+    <nav class="sidebar-nav">
+        <span class="nav-section-label">Main</span>
+        <a href="dashboard.html"  class="nav-link"><span class="nav-icon">📊</span>Dashboard</a>
+        <a href="products.html"   class="nav-link active"><span class="nav-icon">🛍️</span>Products</a>
+        <a href="categories.html" class="nav-link"><span class="nav-icon">🏷️</span>Categories</a>
+        <a href="orders.html"     class="nav-link"><span class="nav-icon">📦</span>Orders</a>
+    </nav>
+    <div class="sidebar-footer">
+        <button class="nav-link" id="logoutBtn" style="width:100%;background:none;border:none;cursor:pointer;color:rgba(255,255,255,.65);font-size:14px;font-weight:500;">
+            <span class="nav-icon">🚪</span>Logout
+        </button>
+    </div>
+</aside>
+
+<!-- ── Main ── -->
+<div class="main-wrapper">
+    <header class="topbar">
+        <span class="topbar-title">Products</span>
+        <div class="topbar-right">
+            <span id="adminEmail" style="font-size:13px;color:var(--text-muted);"></span>
+            <div class="admin-avatar" id="adminAvatar">A</div>
+        </div>
+    </header>
+
+    <main class="page-content">
+        <div class="card">
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <div class="search-bar">
+                        <span>🔍</span>
+                        <input type="text" id="searchInput" placeholder="Search products…">
+                    </div>
+                    <select class="form-control" id="filterCategory" style="max-width:180px;">
+                        <option value="">All Categories</option>
+                    </select>
+                    <select class="form-control" id="filterGender" style="max-width:140px;">
+                        <option value="">All Genders</option>
+                        <option value="Men">Men</option>
+                        <option value="Women">Women</option>
+                        <option value="Unisex">Unisex</option>
+                        <option value="Kids">Kids</option>
+                    </select>
+                </div>
+                <div class="toolbar-right">
+                    <button class="btn btn-primary" id="addProductBtn">＋ Add Product</button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Name / Brand</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Gender</th>
+                            <th>Featured</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsBody">
+                        <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted);">Loading…</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </main>
+</div>
+
+<!-- ── Add / Edit Modal ── -->
+<div class="modal-overlay" id="productModal">
+    <div class="modal modal-lg">
+        <div class="modal-header">
+            <span class="modal-title" id="modalTitle">Add Product</span>
+            <button class="modal-close" id="closeProductModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="editProductId">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Product Name *</label>
+                    <input type="text" class="form-control" id="fName" placeholder="e.g. Classic Aviator">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Brand *</label>
+                    <input type="text" class="form-control" id="fBrand" placeholder="e.g. RayBan">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Price (EGP) *</label>
+                    <input type="number" class="form-control" id="fPrice" placeholder="0.00" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Original Price (EGP)</label>
+                    <input type="number" class="form-control" id="fOriginalPrice" placeholder="0.00" min="0" step="0.01">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Stock *</label>
+                    <input type="number" class="form-control" id="fStock" placeholder="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Rating</label>
+                    <input type="number" class="form-control" id="fRating" placeholder="0.0" min="0" max="5" step="0.1">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select class="form-control" id="fCategory">
+                        <option value="">Select category…</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Gender</label>
+                    <select class="form-control" id="fGender">
+                        <option value="">Select…</option>
+                        <option value="Men">Men</option>
+                        <option value="Women">Women</option>
+                        <option value="Unisex">Unisex</option>
+                        <option value="Kids">Kids</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Frame Shape</label>
+                    <select class="form-control" id="fFrameShape">
+                        <option value="">Select…</option>
+                        <option>Round</option><option>Square</option><option>Rectangle</option>
+                        <option>Oval</option><option>Cat Eye</option><option>Aviator</option>
+                        <option>Wayfarer</option><option>Browline</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Frame Material</label>
+                    <select class="form-control" id="fFrameMaterial">
+                        <option value="">Select…</option>
+                        <option>Metal</option><option>Plastic</option><option>Acetate</option>
+                        <option>Titanium</option><option>Wood</option><option>TR90</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Lens Type</label>
+                    <select class="form-control" id="fLensType">
+                        <option value="">Select…</option>
+                        <option>Single Vision</option><option>Bifocal</option>
+                        <option>Progressive</option><option>Polarized</option>
+                        <option>Photochromic</option><option>Sunglasses</option><option>Clear</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Frame Color</label>
+                    <input type="text" class="form-control" id="fFrameColor" placeholder="e.g. Gold, Black">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" id="fDescription" rows="3" placeholder="Product description…" style="resize:vertical;"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Image URL</label>
+                <input type="url" class="form-control" id="fImageUrl" placeholder="https://…" oninput="previewImg(this.value)">
+                <div style="margin-top:10px;">
+                    <img id="imgPreview" src="" alt="" style="max-width:120px;max-height:90px;border-radius:8px;display:none;object-fit:cover;border:1px solid var(--border);">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-check" style="padding-top:8px;">
+                    <input type="checkbox" id="fFeatured">
+                    <label for="fFeatured">Featured product</label>
+                </div>
+                <div class="form-check" style="padding-top:8px;">
+                    <input type="checkbox" id="fIsNew">
+                    <label for="fIsNew">Mark as New</label>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="cancelProductBtn">Cancel</button>
+            <button class="btn btn-primary" id="saveProductBtn">Save Product</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Delete Confirm Modal ── -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal" style="max-width:400px;">
+        <div class="modal-header">
+            <span class="modal-title">Delete Product</span>
+            <button class="modal-close" id="closeDeleteModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to delete <strong id="deleteProductName"></strong>? This cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="cancelDeleteBtn">Cancel</button>
+            <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script type="module">
+import {
+    auth, db, requireAuth, showToast,
+    collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy,
+    signOut, onAuthStateChanged
+} from './js/firebase-config.js';
+
+const user = await requireAuth();
+document.getElementById('adminEmail').textContent = user.email;
+document.getElementById('adminAvatar').textContent = (user.email?.[0] ?? 'A').toUpperCase();
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await signOut(auth);
+    window.location.href = 'index.html';
+});
+
+/* ── State ── */
+let allProducts  = [];
+let categories   = [];
+let filtered     = [];
+let currentPage  = 1;
+const PAGE_SIZE  = 12;
+let pendingDeleteId = null;
+
+/* ── Load categories into selects ── */
+async function loadCategories() {
+    try {
+        const snap = await getDocs(collection(db, 'categories'));
+        categories = [];
+        snap.forEach(d => categories.push({ id: d.id, ...d.data() }));
+        categories.sort((a,b) => a.name?.localeCompare(b.name));
+
+        const filterSel = document.getElementById('filterCategory');
+        const fCat      = document.getElementById('fCategory');
+        filterSel.innerHTML = '<option value="">All Categories</option>';
+        fCat.innerHTML = '<option value="">Select category…</option>';
+
+        categories.forEach(c => {
+            filterSel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+            fCat.innerHTML      += `<option value="${c.id}">${c.name}</option>`;
+        });
+    } catch(e) { console.error('Categories:', e); }
+}
+
+/* ── Load products ── */
+async function loadProducts() {
+    const tbody = document.getElementById('productsBody');
+    try {
+        const snap = await getDocs(query(collection(db, 'products'), orderBy('name')));
+        allProducts = [];
+        snap.forEach(d => allProducts.push({ id: d.id, ...d.data() }));
+        applyFilters();
+    } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-danger" style="text-align:center;padding:32px;">Failed to load products.</td></tr>`;
+        console.error(e);
+    }
+}
+
+/* ── Filters ── */
+function applyFilters() {
+    const search   = document.getElementById('searchInput').value.toLowerCase();
+    const catId    = document.getElementById('filterCategory').value;
+    const gender   = document.getElementById('filterGender').value;
+
+    filtered = allProducts.filter(p => {
+        const matchSearch = !search || p.name?.toLowerCase().includes(search) || p.brand?.toLowerCase().includes(search);
+        const matchCat    = !catId  || p.categoryId === catId;
+        const matchGender = !gender || p.gender === gender;
+        return matchSearch && matchCat && matchGender;
+    });
+
+    currentPage = 1;
+    renderTable();
+    renderPagination();
+}
+
+['searchInput','filterCategory','filterGender'].forEach(id =>
+    document.getElementById(id).addEventListener('input', applyFilters)
+);
+
+/* ── Render table ── */
+function renderTable() {
+    const tbody = document.getElementById('productsBody');
+    const start = (currentPage-1) * PAGE_SIZE;
+    const page  = filtered.slice(start, start + PAGE_SIZE);
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:48px;">
+            <div class="empty-state"><div class="empty-icon">🔍</div><p>No products found.</p></div>
+        </td></tr>`;
+        return;
+    }
+
+    const catMap = Object.fromEntries(categories.map(c => [c.id, c.name]));
+
+    tbody.innerHTML = page.map(p => `
+    <tr>
+        <td>
+            ${p.imageUrl
+                ? `<img src="${p.imageUrl}" class="td-img" alt="${p.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'"><div class="td-img-placeholder" style="display:none;">👓</div>`
+                : `<div class="td-img-placeholder">👓</div>`}
+        </td>
+        <td>
+            <div class="fw-bold" style="font-size:14px;">${p.name ?? '—'}</div>
+            <div class="text-muted fs-12">${p.brand ?? '—'}</div>
+        </td>
+        <td class="text-muted fs-13">${catMap[p.categoryId] ?? p.category ?? '—'}</td>
+        <td>
+            <div class="fw-bold">EGP ${(p.price ?? 0).toLocaleString()}</div>
+            ${p.originalPrice ? `<div class="text-muted fs-12" style="text-decoration:line-through;">EGP ${p.originalPrice.toLocaleString()}</div>` : ''}
+        </td>
+        <td>
+            <span class="badge ${p.stock > 10 ? 'badge-success' : p.stock > 0 ? 'badge-warning' : 'badge-danger'}">
+                ${p.stock ?? 0}
+            </span>
+        </td>
+        <td class="text-muted fs-13">${p.gender ?? '—'}</td>
+        <td style="text-align:center;">${p.featured ? '⭐' : '—'}</td>
+        <td>
+            <div class="d-flex gap-8">
+                <button class="btn btn-icon btn-sm" title="Edit" onclick="openEdit('${p.id}')">✏️</button>
+                <button class="btn btn-icon btn-sm" title="Delete" onclick="openDelete('${p.id}','${(p.name??'').replace(/'/g,"\\'")}')">🗑️</button>
+            </div>
+        </td>
+    </tr>`).join('');
+}
+
+/* ── Pagination ── */
+function renderPagination() {
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+    const el = document.getElementById('pagination');
+    if (totalPages <= 1) { el.innerHTML = ''; return; }
+
+    let html = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+    for (let i=1; i<=totalPages; i++) {
+        html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+    }
+    html += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>›</button>`;
+    el.innerHTML = html;
+}
+
+window.goPage = p => { currentPage = p; renderTable(); renderPagination(); window.scrollTo(0,0); };
+
+/* ── Open Add Modal ── */
+document.getElementById('addProductBtn').addEventListener('click', () => {
+    clearModal();
+    document.getElementById('modalTitle').textContent = 'Add Product';
+    document.getElementById('editProductId').value = '';
+    openModal('productModal');
+});
+
+/* ── Open Edit Modal ── */
+window.openEdit = id => {
+    const p = allProducts.find(x => x.id === id);
+    if (!p) return;
+    clearModal();
+    document.getElementById('modalTitle').textContent = 'Edit Product';
+    document.getElementById('editProductId').value = id;
+    document.getElementById('fName').value          = p.name ?? '';
+    document.getElementById('fBrand').value         = p.brand ?? '';
+    document.getElementById('fPrice').value         = p.price ?? '';
+    document.getElementById('fOriginalPrice').value = p.originalPrice ?? '';
+    document.getElementById('fStock').value         = p.stock ?? '';
+    document.getElementById('fRating').value        = p.rating ?? '';
+    document.getElementById('fCategory').value      = p.categoryId ?? '';
+    document.getElementById('fGender').value        = p.gender ?? '';
+    document.getElementById('fFrameShape').value    = p.frameShape ?? '';
+    document.getElementById('fFrameMaterial').value = p.frameMaterial ?? '';
+    document.getElementById('fLensType').value      = p.lensType ?? '';
+    document.getElementById('fFrameColor').value    = p.frameColor ?? '';
+    document.getElementById('fDescription').value   = p.description ?? '';
+    document.getElementById('fImageUrl').value      = p.imageUrl ?? '';
+    document.getElementById('fFeatured').checked    = !!p.featured;
+    document.getElementById('fIsNew').checked       = !!p.isNew;
+    previewImg(p.imageUrl ?? '');
+    openModal('productModal');
+};
+
+/* ── Save product ── */
+document.getElementById('saveProductBtn').addEventListener('click', async () => {
+    const id    = document.getElementById('editProductId').value;
+    const name  = document.getElementById('fName').value.trim();
+    const brand = document.getElementById('fBrand').value.trim();
+    const price = parseFloat(document.getElementById('fPrice').value);
+    const stock = parseInt(document.getElementById('fStock').value);
+
+    if (!name || !brand || isNaN(price) || isNaN(stock)) {
+        showToast('Please fill in all required fields.', 'error');
+        return;
+    }
+
+    const catId  = document.getElementById('fCategory').value;
+    const catObj = categories.find(c => c.id === catId);
+
+    const data = {
+        name,
+        brand,
+        price,
+        stock,
+        originalPrice : parseFloat(document.getElementById('fOriginalPrice').value) || null,
+        rating        : parseFloat(document.getElementById('fRating').value) || 0,
+        categoryId    : catId || null,
+        category      : catObj?.name ?? '',
+        gender        : document.getElementById('fGender').value || null,
+        frameShape    : document.getElementById('fFrameShape').value || null,
+        frameMaterial : document.getElementById('fFrameMaterial').value || null,
+        lensType      : document.getElementById('fLensType').value || null,
+        frameColor    : document.getElementById('fFrameColor').value.trim() || null,
+        description   : document.getElementById('fDescription').value.trim() || '',
+        imageUrl      : document.getElementById('fImageUrl').value.trim() || null,
+        featured      : document.getElementById('fFeatured').checked,
+        isNew         : document.getElementById('fIsNew').checked,
+    };
+
+    const saveBtn = document.getElementById('saveProductBtn');
+    saveBtn.innerHTML = '<span class="spinner"></span>';
+    saveBtn.disabled = true;
+
+    try {
+        if (id) {
+            await updateDoc(doc(db, 'products', id), data);
+            showToast('Product updated!');
+        } else {
+            await addDoc(collection(db, 'products'), data);
+            showToast('Product added!');
+        }
+        closeModal('productModal');
+        await loadProducts();
+    } catch(e) {
+        showToast('Error: ' + e.message, 'error');
+    } finally {
+        saveBtn.textContent = 'Save Product';
+        saveBtn.disabled = false;
+    }
+});
+
+/* ── Delete ── */
+window.openDelete = (id, name) => {
+    pendingDeleteId = id;
+    document.getElementById('deleteProductName').textContent = name;
+    openModal('deleteModal');
+};
+
+document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+    if (!pendingDeleteId) return;
+    const btn = document.getElementById('confirmDeleteBtn');
+    btn.innerHTML = '<span class="spinner"></span>';
+    btn.disabled = true;
+    try {
+        await deleteDoc(doc(db, 'products', pendingDeleteId));
+        showToast('Product deleted.', 'info');
+        closeModal('deleteModal');
+        await loadProducts();
+    } catch(e) {
+        showToast('Error: ' + e.message, 'error');
+    } finally {
+        btn.textContent = 'Delete';
+        btn.disabled = false;
+        pendingDeleteId = null;
+    }
+});
+
+/* ── Modal helpers ── */
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function clearModal() {
+    ['fName','fBrand','fPrice','fOriginalPrice','fStock','fRating',
+     'fCategory','fGender','fFrameShape','fFrameMaterial','fLensType',
+     'fFrameColor','fDescription','fImageUrl'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    document.getElementById('fFeatured').checked = false;
+    document.getElementById('fIsNew').checked    = false;
+    const img = document.getElementById('imgPreview');
+    img.src = ''; img.style.display = 'none';
+}
+
+document.getElementById('closeProductModal').addEventListener('click', () => closeModal('productModal'));
+document.getElementById('cancelProductBtn').addEventListener('click', () => closeModal('productModal'));
+document.getElementById('closeDeleteModal').addEventListener('click', () => closeModal('deleteModal'));
+document.getElementById('cancelDeleteBtn').addEventListener('click', () => closeModal('deleteModal'));
+
+/* ── Image preview ── */
+window.previewImg = url => {
+    const img = document.getElementById('imgPreview');
+    if (url) { img.src = url; img.style.display = 'block'; }
+    else { img.src = ''; img.style.display = 'none'; }
+};
+
+/* ── Init ── */
+await loadCategories();
+await loadProducts();
+</script>
+</body>
+</html>

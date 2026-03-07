@@ -1,6 +1,5 @@
 package com.opticalshop.presentation.screens.auth.register
 
-import android.app.Activity
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -62,16 +61,22 @@ fun RegisterScreen(
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-            try {
-                val account = task.getResult(ApiException::class.java)
-                account?.idToken?.let { idToken ->
-                     viewModel.onGoogleLogin(idToken)
-                }
-            } catch (e: ApiException) {
-                Toast.makeText(context, "Google Sign-In Failed: ${e.statusCode}", Toast.LENGTH_LONG).show()
-                e.printStackTrace()
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            account?.idToken?.let { idToken ->
+                viewModel.onGoogleLogin(
+                    idToken     = idToken,
+                    displayName = account.displayName ?: "",
+                    photoUrl    = account.photoUrl?.toString() ?: ""
+                )
+            } ?: Toast.makeText(context, "Google Sign-In: no ID token returned", Toast.LENGTH_LONG).show()
+        } catch (e: ApiException) {
+            if (e.statusCode == com.google.android.gms.common.api.CommonStatusCodes.CANCELED) {
+                // User pressed back — silent dismiss
+            } else {
+                val hint = if (e.statusCode == 10) " (Add SHA-1 in Firebase Console)" else ""
+                Toast.makeText(context, "Google Sign-In error ${e.statusCode}$hint", Toast.LENGTH_LONG).show()
             }
         }
     }

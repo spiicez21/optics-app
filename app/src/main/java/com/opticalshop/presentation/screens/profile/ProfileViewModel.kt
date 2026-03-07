@@ -1,9 +1,11 @@
 package com.opticalshop.presentation.screens.profile
 
+import android.net.Uri
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.opticalshop.data.remote.FirebaseStorageService
 import com.opticalshop.domain.model.Result
 import com.opticalshop.domain.usecase.auth.GetCurrentUserUseCase
 import com.opticalshop.domain.usecase.auth.LogoutUseCase
@@ -19,7 +21,8 @@ class ProfileViewModel @Inject constructor(
     private val getProfileUseCase: GetProfileUseCase,
     private val updateProfileUseCase: UpdateProfileUseCase,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
-    private val logoutUseCase: LogoutUseCase
+    private val logoutUseCase: LogoutUseCase,
+    private val storageService: FirebaseStorageService
 ) : ViewModel() {
 
     private val _state = mutableStateOf(ProfileState())
@@ -33,7 +36,6 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             val firebaseUser = getCurrentUserUseCase().first()
             if (firebaseUser != null) {
-                // Pre-fill from Firebase Auth while loading from Firestore
                 _state.value = _state.value.copy(
                     name = firebaseUser.displayName,
                     email = firebaseUser.email
@@ -52,7 +54,6 @@ class ProfileViewModel @Inject constructor(
                             )
                         }
                         is Result.Error -> {
-                            // If Firestore profile is missing, we still have the Firebase info
                             _state.value = _state.value.copy(
                                 isLoading = false,
                                 error = if (result.exception.message == "User not found") null else result.exception.message
@@ -90,6 +91,26 @@ class ProfileViewModel @Inject constructor(
                     }
                     Result.Loading -> {}
                 }
+            }
+        }
+    }
+
+    fun uploadProfileImage(uri: Uri) {
+        val userId = _state.value.user?.id ?: return
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isUploadingImage = true, error = null)
+            try {
+                val downloadUrl = storageService.uploadProfileImage(userId, uri)
+                updateProfileUseCase(userId, mapOf("photoUrl" to downloadUrl))
+                _state.value = _state.value.copy(
+                    profileImageUrl = downloadUrl,
+                    isUploadingImage = false
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isUploadingImage = false,
+                    error = "Failed to upload image: ${e.message}"
+                )
             }
         }
     }

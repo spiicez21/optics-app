@@ -31,7 +31,6 @@ import com.google.android.gms.common.api.ApiException
 import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.shape.RoundedCornerShape
-import android.app.Activity
 import com.opticalshop.presentation.components.OpticalTextField
 import kotlinx.coroutines.flow.collectLatest
 
@@ -57,20 +56,24 @@ fun LoginScreen(
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-            try {
-                val account = task.getResult(ApiException::class.java)
-                account?.idToken?.let { idToken ->
-                     viewModel.onGoogleLogin(idToken)
-                }
-            } catch (e: ApiException) {
-                // Common codes: 10 (Developer Error), 12500 (Sign In Failed)
-                Toast.makeText(context, "Google Sign-In Failed: ${e.statusCode}\nMessage: ${e.status.statusMessage ?: "Unknown"}", Toast.LENGTH_LONG).show()
-                e.printStackTrace()
+        // Always parse the intent — Google returns RESULT_CANCELED even on error (e.g. code 10)
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            account?.idToken?.let { idToken ->
+                viewModel.onGoogleLogin(
+                    idToken    = idToken,
+                    displayName = account.displayName ?: "",
+                    photoUrl   = account.photoUrl?.toString() ?: ""
+                )
+            } ?: Toast.makeText(context, "Google Sign-In: no ID token returned", Toast.LENGTH_LONG).show()
+        } catch (e: ApiException) {
+            if (e.statusCode == com.google.android.gms.common.api.CommonStatusCodes.CANCELED) {
+                // User pressed back — silent dismiss
+            } else {
+                val hint = if (e.statusCode == 10) " (Add SHA-1 in Firebase Console)" else ""
+                Toast.makeText(context, "Google Sign-In error ${e.statusCode}$hint", Toast.LENGTH_LONG).show()
             }
-        } else {
-             Toast.makeText(context, "Google Sign-In Cancelled", Toast.LENGTH_SHORT).show()
         }
     }
 

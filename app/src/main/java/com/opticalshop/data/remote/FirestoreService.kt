@@ -126,20 +126,32 @@ class FirestoreService @Inject constructor(
     }
 
     // Order Operations
-    suspend fun placeOrder(userId: String, order: Order) {
-        firestore.collection(Constants.USERS_COLLECTION)
-            .document(userId)
-            .collection(Constants.ORDERS_COLLECTION)
-            .document(order.id)
-            .set(order)
-            .await()
+
+    /**
+     * Places an order and clears the user's cart in a single atomic batch write.
+     * If either operation fails, neither is committed to Firestore, preventing
+     * ghost orders or leftover cart items.
+     */
+    suspend fun placeOrderAtomically(userId: String, order: Order) {
+        val userRef = firestore.collection(Constants.USERS_COLLECTION).document(userId)
+        val orderRef = userRef.collection(Constants.ORDERS_COLLECTION).document(order.id)
+        val cartRef = userRef.collection(Constants.CART_COLLECTION)
+
+        // Read cart docs first (outside the batch), then write everything at once.
+        val cartSnapshot = cartRef.get().await()
+        firestore.runBatch { batch ->
+            batch.set(orderRef, order)
+            for (doc in cartSnapshot.documents) {
+                batch.delete(doc.reference)
+            }
+        }.await()
     }
 
     suspend fun clearCart(userId: String) {
         val cartRef = firestore.collection(Constants.USERS_COLLECTION)
             .document(userId)
             .collection(Constants.CART_COLLECTION)
-        
+
         val snapshot = cartRef.get().await()
         firestore.runBatch { batch ->
             for (doc in snapshot.documents) {
@@ -214,8 +226,11 @@ class FirestoreService @Inject constructor(
         if (!snapshot.exists()) {
             userRef.set(user).await()
         } else {
-            // Optional: Update basic info if needed, but let's preserve existing data for now
-            // userRef.update("displayName", user.displayName, "photoUrl", user.photoUrl).await()
+            // Always sync displayName and photoUrl from Google profile
+            val updates = mutableMapOf<String, Any>()
+            if (user.displayName.isNotBlank()) updates["displayName"] = user.displayName
+            if (user.photoUrl.isNotBlank()) updates["photoUrl"] = user.photoUrl
+            if (updates.isNotEmpty()) userRef.update(updates).await()
         }
     }
 

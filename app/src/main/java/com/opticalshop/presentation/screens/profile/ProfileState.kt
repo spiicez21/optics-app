@@ -8,6 +8,7 @@ data class ProfileState(
     val email: String = "",
     val profileImageUrl: String? = null,
     val isLoading: Boolean = false,
+    val isUploadingImage: Boolean = false,
     val isUpdated: Boolean = false,
     val error: String? = null
 )

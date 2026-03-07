@@ -1,8 +1,13 @@
 package com.opticalshop.presentation.navigation
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -15,11 +20,13 @@ import com.opticalshop.presentation.screens.auth.register.RegisterScreen
 import com.opticalshop.presentation.screens.cart.CartScreen
 import com.opticalshop.presentation.screens.checkout.CheckoutScreen
 import com.opticalshop.presentation.screens.home.HomeScreen
-import com.opticalshop.presentation.screens.profile.ProfileScreen
 import com.opticalshop.presentation.screens.orders.OrderDetailScreen
 import com.opticalshop.presentation.screens.orders.OrdersScreen
 import com.opticalshop.presentation.screens.product.ProductDetailScreen
+import com.opticalshop.presentation.screens.profile.ProfileScreen
 import com.opticalshop.presentation.screens.splash.SplashScreen
+
+private const val NAV_ANIM_DURATION = 300
 
 @Composable
 fun NavGraph(
@@ -30,9 +37,40 @@ fun NavGraph(
     NavHost(
         navController = navController,
         startDestination = startDestination,
-        modifier = modifier
+        modifier = modifier,
+        // Forward: slide in from right + fade
+        enterTransition = {
+            slideInHorizontally(
+                initialOffsetX = { it },
+                animationSpec = tween(NAV_ANIM_DURATION, easing = FastOutSlowInEasing)
+            ) + fadeIn(tween(NAV_ANIM_DURATION))
+        },
+        exitTransition = {
+            slideOutHorizontally(
+                targetOffsetX = { -it / 3 },
+                animationSpec = tween(NAV_ANIM_DURATION, easing = FastOutSlowInEasing)
+            ) + fadeOut(tween(NAV_ANIM_DURATION))
+        },
+        // Back: reverse direction
+        popEnterTransition = {
+            slideInHorizontally(
+                initialOffsetX = { -it / 3 },
+                animationSpec = tween(NAV_ANIM_DURATION, easing = FastOutSlowInEasing)
+            ) + fadeIn(tween(NAV_ANIM_DURATION))
+        },
+        popExitTransition = {
+            slideOutHorizontally(
+                targetOffsetX = { it },
+                animationSpec = tween(NAV_ANIM_DURATION, easing = FastOutSlowInEasing)
+            ) + fadeOut(tween(NAV_ANIM_DURATION))
+        }
     ) {
-        composable(Screen.Splash.route) {
+        // Splash — crossfade only
+        composable(
+            route = Screen.Splash.route,
+            enterTransition = { fadeIn(tween(500)) },
+            exitTransition = { fadeOut(tween(500)) }
+        ) {
             SplashScreen(
                 onNavigateToHome = {
                     navController.navigate(Screen.Home.route) {
@@ -113,12 +151,8 @@ fun NavGraph(
 
         composable(Screen.Cart.route) {
             CartScreen(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onCheckoutClick = {
-                    navController.navigate(Screen.Checkout.route)
-                }
+                onNavigateBack = { navController.popBackStack() },
+                onCheckoutClick = { navController.navigate(Screen.Checkout.route) }
             )
         }
 
@@ -127,20 +161,15 @@ fun NavGraph(
             arguments = Screen.ProductDetail.arguments
         ) {
             ProductDetailScreen(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onNavigateToCheckout = {
-                    navController.navigate(Screen.Checkout.route)
-                }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToCheckout = { navController.navigate(Screen.Checkout.route) },
+                onNavigateToCart = { navController.navigate(Screen.Cart.route) }
             )
         }
 
         composable(Screen.Checkout.route) {
             CheckoutScreen(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
+                onNavigateBack = { navController.popBackStack() },
                 onOrderSuccess = {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
@@ -159,9 +188,9 @@ fun NavGraph(
         }
 
         composable(Screen.Orders.route) {
-            com.opticalshop.presentation.screens.orders.OrdersScreen(
+            OrdersScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onOrderClick = { orderId: String ->
+                onOrderClick = { orderId ->
                     navController.navigate(Screen.OrderDetail.createRoute(orderId))
                 }
             )
@@ -169,11 +198,9 @@ fun NavGraph(
 
         composable(
             route = Screen.OrderDetail.route,
-            arguments = listOf(
-                navArgument("orderId") { type = NavType.StringType }
-            )
+            arguments = listOf(navArgument("orderId") { type = NavType.StringType })
         ) {
-            com.opticalshop.presentation.screens.orders.OrderDetailScreen(
+            OrderDetailScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }

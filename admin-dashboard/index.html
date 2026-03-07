@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpticShop Admin — Login</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <style>
+        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #FF6B35 150%); }
+    </style>
+</head>
+<body>
+    <div class="login-page">
+        <div class="login-card">
+            <div class="login-logo">
+                <div class="logo-icon">👓</div>
+                <span>OpticShop</span>
+            </div>
+
+            <h2>Admin Portal</h2>
+            <p>Sign in to manage your store</p>
+
+            <div class="form-group">
+                <label class="form-label" for="email">Email Address</label>
+                <input id="email" type="email" class="form-control" placeholder="admin@opticshop.com" autocomplete="email">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input id="password" type="password" class="form-control" placeholder="••••••••" autocomplete="current-password">
+            </div>
+
+            <button class="login-btn" id="loginBtn">Sign In</button>
+            <p class="login-error" id="loginError"></p>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script type="module">
+        import { auth, signInWithEmailAndPassword, onAuthStateChanged } from './js/firebase-config.js';
+
+        // If already logged in, go to dashboard
+        onAuthStateChanged(auth, user => {
+            if (user) window.location.href = 'dashboard.html';
+        });
+
+        const emailEl   = document.getElementById('email');
+        const passEl    = document.getElementById('password');
+        const loginBtn  = document.getElementById('loginBtn');
+        const errorEl   = document.getElementById('loginError');
+
+        loginBtn.addEventListener('click', handleLogin);
+
+        [emailEl, passEl].forEach(el =>
+            el.addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); })
+        );
+
+        async function handleLogin() {
+            errorEl.textContent = '';
+            const email = emailEl.value.trim();
+            const pass  = passEl.value;
+
+            if (!email || !pass) {
+                errorEl.textContent = 'Please enter your email and password.';
+                return;
+            }
+
+            loginBtn.innerHTML = '<span class="spinner"></span>';
+            loginBtn.disabled = true;
+
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+                window.location.href = 'dashboard.html';
+            } catch (err) {
+                loginBtn.textContent = 'Sign In';
+                loginBtn.disabled = false;
+                errorEl.textContent = friendlyError(err.code);
+            }
+        }
+
+        function friendlyError(code) {
+            const map = {
+                'auth/user-not-found':    'No account found with this email.',
+                'auth/wrong-password':    'Incorrect password.',
+                'auth/invalid-email':     'Invalid email address.',
+                'auth/too-many-requests': 'Too many attempts. Try again later.',
+                'auth/invalid-credential':'Invalid credentials.',
+            };
+            return map[code] ?? 'Sign-in failed. Please try again.';
+        }
+    </script>
+</body>
+</html>

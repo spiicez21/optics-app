@@ -116,10 +116,14 @@ class ProductDetailViewModel @Inject constructor(
     private val _navigateToCheckout = mutableStateOf(false)
     val navigateToCheckout: State<Boolean> = _navigateToCheckout
 
+    private val _navigateToCart = mutableStateOf(false)
+    val navigateToCart: State<Boolean> = _navigateToCart
+
     private val _snackbarMessage = mutableStateOf<String?>(null)
     val snackbarMessage: State<String?> = _snackbarMessage
 
     fun resetNavigateToCheckout() { _navigateToCheckout.value = false }
+    fun resetNavigateToCart() { _navigateToCart.value = false }
     fun resetSnackbarMessage() { _snackbarMessage.value = null }
 
     fun buyNow() {
@@ -162,9 +166,9 @@ class ProductDetailViewModel @Inject constructor(
                     lensOptions = lensOptions
                 )
                 addToCartUseCase(user.id, cartItem)
-                
+
                 if (!silent) {
-                    _snackbarMessage.value = "Added to Cart!"
+                    _navigateToCart.value = true
                 }
             }
         }

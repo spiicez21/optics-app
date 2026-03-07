@@ -19,10 +19,10 @@ class RegisterViewModel @Inject constructor(
     private val loginWithGoogleUseCase: LoginWithGoogleUseCase
 ) : ViewModel() {
 
-    fun onGoogleLogin(idToken: String) {
+    fun onGoogleLogin(idToken: String, displayName: String = "", photoUrl: String = "") {
         viewModelScope.launch {
             _state.value = Result.Loading
-            when (val result = loginWithGoogleUseCase(idToken)) {
+            when (val result = loginWithGoogleUseCase(idToken, displayName, photoUrl)) {
                 is Result.Success -> {
                     _state.value = Result.Success(Unit)
                     _eventFlow.emit(UiEvent.NavigateToHome)

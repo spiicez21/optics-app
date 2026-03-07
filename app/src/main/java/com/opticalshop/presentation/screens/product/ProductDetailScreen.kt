@@ -37,6 +37,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import com.opticalshop.presentation.components.OpticalLottieAnimation
+import com.opticalshop.presentation.components.ProductDetailSkeleton
 import com.opticalshop.R
 import kotlinx.coroutines.delay
 
@@ -45,6 +46,7 @@ import kotlinx.coroutines.delay
 fun ProductDetailScreen(
     onNavigateBack: () -> Unit,
     onNavigateToCheckout: () -> Unit,
+    onNavigateToCart: () -> Unit,
     viewModel: ProductDetailViewModel = hiltViewModel()
 ) {
     val state = viewModel.state.value
@@ -56,6 +58,13 @@ fun ProductDetailScreen(
         if (viewModel.navigateToCheckout.value) {
             onNavigateToCheckout()
             viewModel.resetNavigateToCheckout()
+        }
+    }
+
+    LaunchedEffect(viewModel.navigateToCart.value) {
+        if (viewModel.navigateToCart.value) {
+            onNavigateToCart()
+            viewModel.resetNavigateToCart()
         }
     }
 
@@ -170,9 +179,7 @@ fun ProductDetailScreen(
         }
     ) { padding ->
         if (state.isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
+            ProductDetailSkeleton(modifier = Modifier.padding(padding))
         } else if (product != null) {
             Column(
                 modifier = Modifier

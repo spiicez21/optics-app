@@ -15,8 +15,7 @@ class OrderRepositoryImpl @Inject constructor(
 
     override suspend fun placeOrder(order: Order): Result<String> {
         return try {
-            firestoreService.placeOrder(order.userId, order)
-            firestoreService.clearCart(order.userId)
+            firestoreService.placeOrderAtomically(order.userId, order)
             Result.Success(order.id)
         } catch (e: Exception) {
             Result.Error(e)

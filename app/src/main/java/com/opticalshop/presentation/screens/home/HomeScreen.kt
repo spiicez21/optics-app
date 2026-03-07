@@ -1,39 +1,66 @@
 package com.opticalshop.presentation.screens.home
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.sp
-import androidx.compose.material.icons.Icons
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.opticalshop.presentation.ThemeViewModel
 import com.opticalshop.presentation.components.CategoryChip
-import com.opticalshop.presentation.components.ProductCard
+import com.opticalshop.presentation.components.CategoryChipSkeleton
 import com.opticalshop.presentation.components.OpticalTextField
+import com.opticalshop.presentation.components.ProductCard
+import com.opticalshop.presentation.components.ProductCardSkeleton
 import com.opticalshop.presentation.theme.PremiumOrangeStart
-
-import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.runtime.collectAsState
-
-// ...
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,83 +69,97 @@ fun HomeScreen(
     onCartClick: () -> Unit,
     onProfileClick: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
-    themeViewModel: com.opticalshop.presentation.ThemeViewModel = hiltViewModel()
+    themeViewModel: ThemeViewModel = hiltViewModel()
 ) {
     val state = viewModel.state.value
-    val isDarkTheme = themeViewModel.isDarkTheme.collectAsState(initial = null).value 
-        ?: androidx.compose.foundation.isSystemInDarkTheme()
+    val isDarkTheme = themeViewModel.isDarkTheme.collectAsState(initial = null).value
+        ?: isSystemInDarkTheme()
 
     val pullRefreshState = rememberPullToRefreshState()
-    
-    // Trigger refresh when user pulls
+
+    // Navigate to cart when item is added from a product card
+    LaunchedEffect(Unit) {
+        viewModel.cartNavigationEvent.collect {
+            onCartClick()
+        }
+    }
+
     LaunchedEffect(pullRefreshState.isRefreshing) {
-        if (pullRefreshState.isRefreshing) {
-            viewModel.refresh()
-        }
+        if (pullRefreshState.isRefreshing) viewModel.refresh()
     }
 
-    // End refresh when loading is finished
     LaunchedEffect(state.isLoading) {
-        if (!state.isLoading && pullRefreshState.isRefreshing) {
-            pullRefreshState.endRefresh()
-        }
+        if (!state.isLoading && pullRefreshState.isRefreshing) pullRefreshState.endRefresh()
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).nestedScroll(pullRefreshState.nestedScrollConnection)) {
+    val showSkeleton = state.isLoading && state.allProducts.isEmpty() && !pullRefreshState.isRefreshing
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .nestedScroll(pullRefreshState.nestedScrollConnection)
+    ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
-            // Header
+            // ─── Header ───────────────────────────────────────────
             item {
                 HomeHeader(
                     userName = state.userName,
                     profileImageUrl = state.profileImageUrl,
                     onProfileClick = onProfileClick,
-                    onNotificationClick = { /* Handle */ },
                     onCartClick = onCartClick,
                     isDarkTheme = isDarkTheme,
                     onThemeToggle = { themeViewModel.toggleTheme(isDarkTheme) }
                 )
             }
 
-                // Search Bar
-                item {
-                    OpticalTextField(
-                        value = state.searchQuery,
-                        onValueChange = viewModel::onSearchQueryChange,
-                        label = "",
-                        placeholder = "Search...",
-                        modifier = Modifier.padding(16.dp),
-                        leadingIcon = {
-                            Icon(imageVector = Icons.Default.Search, contentDescription = null, tint = Color.Gray)
-                        },
-                        trailingIcon = {
-                            Surface(
-                                modifier = Modifier.size(36.dp),
-                                shape = androidx.compose.foundation.shape.CircleShape,
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Menu, 
-                                    contentDescription = "Filter",
-                                    modifier = Modifier.padding(8.dp),
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
+            // ─── Search bar ───────────────────────────────────────
+            item {
+                OpticalTextField(
+                    value = state.searchQuery,
+                    onValueChange = viewModel::onSearchQueryChange,
+                    label = "",
+                    placeholder = "Search...",
+                    modifier = Modifier.padding(16.dp),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null,
+                            tint = Color.Gray
+                        )
+                    },
+                    trailingIcon = {
+                        Surface(
+                            modifier = Modifier.size(36.dp),
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Menu,
+                                contentDescription = "Filter",
+                                modifier = Modifier.padding(8.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
                         }
-                    )
-                }
+                    }
+                )
+            }
 
-                // Categories
-                item {
-                    SectionHeader(title = "Categories", onSeeAllClick = { /* Handle */ })
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
+            // ─── Categories ───────────────────────────────────────
+            item {
+                SectionHeader(title = "Categories", onSeeAllClick = {})
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (showSkeleton) {
+                        items(5) { CategoryChipSkeleton() }
+                    } else {
                         items(state.categories) { category ->
-                            com.opticalshop.presentation.components.CategoryChip(
+                            CategoryChip(
                                 category = category,
                                 isSelected = state.selectedCategoryId == category.id,
                                 onCategoryClick = viewModel::onCategorySelect
@@ -126,22 +167,41 @@ fun HomeScreen(
                         }
                     }
                 }
+            }
 
-                // Promo Banner
-                item {
-                    PromoBanner()
+            // ─── Promo banner ─────────────────────────────────────
+            if (!showSkeleton) {
+                item { PromoBanner() }
+            }
+
+            // ─── Popular products header ───────────────────────────
+            item {
+                SectionHeader(title = "Popular Products", onSeeAllClick = {})
+            }
+
+            // ─── Skeleton product cards ────────────────────────────
+            if (showSkeleton) {
+                items(3) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp)
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) { ProductCardSkeleton() }
+                        Box(modifier = Modifier.weight(1f)) { ProductCardSkeleton() }
+                    }
                 }
-
-                // Popular Products
-                item {
-                    SectionHeader(title = "Popular Product", onSeeAllClick = { /* Handle */ })
-                }
-
-                items(state.popularProducts.chunked(2)) { list ->
-                    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
-                        list.forEach { product ->
+            } else {
+                // ─── Real product cards ────────────────────────────
+                items(state.popularProducts.chunked(2)) { row ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp)
+                    ) {
+                        row.forEach { product ->
                             Box(modifier = Modifier.weight(1f)) {
-                                com.opticalshop.presentation.components.ProductCard(
+                                ProductCard(
                                     product = product,
                                     onProductClick = onProductClick,
                                     onAddToCart = viewModel::addToCart,
@@ -150,44 +210,40 @@ fun HomeScreen(
                                 )
                             }
                         }
-                        if (list.size == 1) {
-                            Spacer(modifier = Modifier.weight(1f))
-                        }
+                        if (row.size == 1) Spacer(modifier = Modifier.weight(1f))
                     }
                 }
             }
+        }
 
-            if (state.isLoading && state.categories.isEmpty() && state.popularProducts.isEmpty() && !pullRefreshState.isRefreshing) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            }
-
-        if (state.error != null && state.categories.isEmpty()) {
+        // ─── Error state ──────────────────────────────────────────
+        if (state.error != null && state.allProducts.isEmpty()) {
             Text(
                 text = state.error,
                 color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.align(Alignment.Center).padding(16.dp)
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(16.dp)
             )
         }
 
-        // Bottom Fade Overlay
+        // ─── Bottom fade gradient ─────────────────────────────────
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(120.dp)
+                .height(100.dp)
                 .align(Alignment.BottomCenter)
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
                             Color.Transparent,
-                            MaterialTheme.colorScheme.background.copy(alpha = 0.5f),
-                            MaterialTheme.colorScheme.background.copy(alpha = 0.8f),
+                            MaterialTheme.colorScheme.background.copy(alpha = 0.7f),
                             MaterialTheme.colorScheme.background
                         )
                     )
                 )
         )
-        
-        // Show PullToRefresh indicator only when active (progress > 0 or refreshing)
+
         if (pullRefreshState.progress > 0 || pullRefreshState.isRefreshing) {
             PullToRefreshContainer(
                 state = pullRefreshState,
@@ -202,7 +258,6 @@ fun HomeHeader(
     userName: String,
     profileImageUrl: String?,
     onProfileClick: () -> Unit,
-    onNotificationClick: () -> Unit,
     onCartClick: () -> Unit,
     isDarkTheme: Boolean,
     onThemeToggle: () -> Unit
@@ -225,17 +280,19 @@ fun HomeHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Surface(
-            modifier = Modifier.size(52.dp).clickable { onProfileClick() },
+            modifier = Modifier
+                .size(52.dp)
+                .clickable { onProfileClick() },
             shape = CircleShape,
             color = MaterialTheme.colorScheme.surface,
             shadowElevation = 4.dp
         ) {
             if (profileImageUrl != null) {
-                coil.compose.AsyncImage(
+                AsyncImage(
                     model = profileImageUrl,
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                    contentScale = ContentScale.Crop
                 )
             } else {
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
@@ -257,34 +314,34 @@ fun HomeHeader(
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.width(16.dp))
-        
+
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Hello, $userName 👋", 
-                style = MaterialTheme.typography.bodyMedium, 
+                text = "Hello, $userName 👋",
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
             Text(
-                text = greeting, 
-                style = MaterialTheme.typography.titleLarge, 
+                text = greeting,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
-        
+
         Surface(
             shape = CircleShape,
             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
             modifier = Modifier.size(40.dp)
         ) {
             IconButton(onClick = onThemeToggle) {
-                 Icon(
-                     imageVector = if (isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
-                     contentDescription = "Toggle Theme",
-                     modifier = Modifier.size(20.dp)
-                 )
+                Icon(
+                    imageVector = if (isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
+                    contentDescription = "Toggle Theme",
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
 
@@ -297,8 +354,8 @@ fun HomeHeader(
         ) {
             IconButton(onClick = onCartClick) {
                 Icon(
-                    imageVector = Icons.Default.ShoppingCart, 
-                    contentDescription = null, 
+                    imageVector = Icons.Default.ShoppingCart,
+                    contentDescription = "Cart",
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -309,11 +366,17 @@ fun HomeHeader(
 @Composable
 fun SectionHeader(title: String, onSeeAllClick: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
         Text(
             text = "See All",
             style = MaterialTheme.typography.bodyMedium,
@@ -325,7 +388,7 @@ fun SectionHeader(title: String, onSeeAllClick: () -> Unit) {
 
 @Composable
 fun PromoBanner() {
-    Card(
+    androidx.compose.material3.Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
@@ -340,18 +403,13 @@ fun PromoBanner() {
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
-            
-            // Glassmorphism Overlay
             Box(
                 modifier = Modifier
-                    .fillMaxHeight()
-                    .width(220.dp)
+                    .fillMaxSize()
                     .background(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(
-                                Color.Black.copy(alpha = 0.6f),
-                                Color.Transparent
-                            )
+                        Brush.horizontalGradient(
+                            colors = listOf(Color.Black.copy(alpha = 0.6f), Color.Transparent),
+                            endX = 600f
                         )
                     )
                     .padding(24.dp),
@@ -374,7 +432,7 @@ fun PromoBanner() {
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
-                        onClick = { /* Handle */ },
+                        onClick = {},
                         colors = ButtonDefaults.buttonColors(
                             containerColor = PremiumOrangeStart,
                             contentColor = Color.White
@@ -389,4 +447,3 @@ fun PromoBanner() {
         }
     }
 }
-

@@ -1,26 +1,109 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+# ============================================================
+#  OpticShop — .gitignore
+#  Never commit files listed here. They contain API keys,
+#  secrets, signing credentials, or machine-local config.
+# ============================================================
+
+# ──────────────────────────────────────────────────────────
+#  SECRETS & API KEYS  ← most important section
+# ──────────────────────────────────────────────────────────
+
+# Firebase — Android (contains API key + OAuth client IDs)
+google-services.json
+
+# Firebase — Web admin dashboard (contains apiKey, projectId, etc.)
+admin-dashboard/js/firebase-config.js
+
+# Firebase service-account key (server-side admin SDK)
+firebase-adminsdk*.json
+service-account*.json
+*-service-account*.json
+
+# Firebase emulator tokens & RC cache
+.firebase/
+.firebaserc         # can contain project aliases — add to .gitignore if it lists env-specific IDs
+
+# Environment variable files
+.env
+.env.*
+!.env.example
+!.env.*.example
+secrets.properties
+secrets.xml
+
+# Android signing keystores & signing configs
+*.keystore
+*.jks
+keystore.properties
+release/
+signing.properties
+
+# Local SDK / machine config (may contain NDK path, signing paths)
 local.properties
 
-ign.md
-google-services.json
-build
-mocks
-scripts
-.idea
-.kotlin
-.gradle
-release
+# ──────────────────────────────────────────────────────────
+#  ANDROID / GRADLE BUILD OUTPUT
+# ──────────────────────────────────────────────────────────
+*.iml
+.gradle/
+/build/
+app/build/
+**/build/
+.externalNativeBuild/
+.cxx/
+captures/
+*.ap_
+*.apk
+*.aab
+output-metadata.json
+
+# ──────────────────────────────────────────────────────────
+#  IDE FILES
+# ──────────────────────────────────────────────────────────
+.idea/
+!.idea/codeStyles/
+!.idea/inspectionProfiles/
+*.ipr
+*.iws
+*.iml
+
+# ──────────────────────────────────────────────────────────
+#  KOTLIN / JVM
+# ──────────────────────────────────────────────────────────
+.kotlin/
+
+# ──────────────────────────────────────────────────────────
+#  OS FILES
+# ──────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ──────────────────────────────────────────────────────────
+#  NODE / WEB  (old HTML dashboard + React dashboard)
+# ──────────────────────────────────────────────────────────
+
+# Dependencies
+node_modules/
+
+# React / Vite build output
+admin-dashboard-react/dist/
+admin-dashboard-react/.vite/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Vite / Rollup cache
+.vite/
+
+# ──────────────────────────────────────────────────────────
+#  MISC PROJECT
+# ──────────────────────────────────────────────────────────
+mocks/
+scripts/
 .agent
+ign.md

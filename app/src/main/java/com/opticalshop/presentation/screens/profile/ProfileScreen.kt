@@ -1,5 +1,7 @@
 package com.opticalshop.presentation.screens.profile
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -32,10 +34,15 @@ fun ProfileScreen(
     val scrollState = rememberScrollState()
     val isDarkTheme = androidx.compose.foundation.isSystemInDarkTheme()
 
-    // Glass styling tokens
     val glassColor = if (isDarkTheme) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.1f)
     val glassBorderColor = if (isDarkTheme) Color.White.copy(alpha = 0.25f) else Color.Black.copy(alpha = 0.15f)
-    val glassContentColor = if (isDarkTheme) Color.White else Color.Black
+
+    // Image picker launcher — opens gallery, no extra permission dialog needed on Android 13+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let { viewModel.uploadProfileImage(it) }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
@@ -51,7 +58,6 @@ fun ProfileScreen(
                     .verticalScroll(scrollState)
             ) {
                 Box(modifier = Modifier.fillMaxWidth()) {
-                    // Header Background with Gradient (Now part of scroll)
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -69,7 +75,6 @@ fun ProfileScreen(
                     Column {
                         Spacer(modifier = Modifier.height(140.dp))
 
-                        // User Info Card (Floating)
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -83,26 +88,72 @@ fun ProfileScreen(
                                 modifier = Modifier.padding(24.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Surface(
-                                    modifier = Modifier.size(100.dp),
-                                    shape = androidx.compose.foundation.shape.CircleShape,
-                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                                // Profile avatar with edit overlay
+                                Box(
+                                    modifier = Modifier
+                                        .size(100.dp)
+                                        .clickable { imagePickerLauncher.launch("image/*") },
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        if (state.profileImageUrl != null) {
-                                            coil.compose.AsyncImage(
-                                                model = state.profileImageUrl,
-                                                contentDescription = null,
-                                                modifier = Modifier.fillMaxSize(),
-                                                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                                    Surface(
+                                        modifier = Modifier.fillMaxSize(),
+                                        shape = androidx.compose.foundation.shape.CircleShape,
+                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            if (state.profileImageUrl != null) {
+                                                coil.compose.AsyncImage(
+                                                    model = state.profileImageUrl,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.fillMaxSize(),
+                                                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                                                )
+                                            } else {
+                                                Text(
+                                                    text = state.name.take(1).ifBlank { "G" }.uppercase(),
+                                                    style = MaterialTheme.typography.displaySmall,
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    // Upload progress spinner overlay
+                                    if (state.isUploadingImage) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .background(
+                                                    Color.Black.copy(alpha = 0.4f),
+                                                    shape = androidx.compose.foundation.shape.CircleShape
+                                                ),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(32.dp),
+                                                color = Color.White,
+                                                strokeWidth = 2.dp
                                             )
-                                        } else {
-                                            Text(
-                                                text = state.name.take(1).ifBlank { "G" }.uppercase(),
-                                                style = MaterialTheme.typography.displaySmall,
-                                                color = MaterialTheme.colorScheme.primary,
-                                                fontWeight = FontWeight.Bold
-                                            )
+                                        }
+                                    } else {
+                                        // Edit badge
+                                        Surface(
+                                            modifier = Modifier
+                                                .size(28.dp)
+                                                .align(Alignment.BottomEnd),
+                                            shape = androidx.compose.foundation.shape.CircleShape,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            shadowElevation = 4.dp
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                Icon(
+                                                    imageVector = Icons.Default.CameraAlt,
+                                                    contentDescription = "Change photo",
+                                                    modifier = Modifier.size(14.dp),
+                                                    tint = Color.White
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -126,7 +177,6 @@ fun ProfileScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Menu Sections
                 SectionHeader("My Account")
                 Surface(
                     modifier = Modifier
@@ -179,7 +229,6 @@ fun ProfileScreen(
 
                 Spacer(modifier = Modifier.height(48.dp))
 
-                // Glassmorphism Logout Pill Button
                 Surface(
                     onClick = { viewModel.logout() },
                     modifier = Modifier
@@ -214,7 +263,7 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(100.dp))
             }
 
-            // Top Bar Overlay (Fixed at top)
+            // Top Bar Overlay
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
