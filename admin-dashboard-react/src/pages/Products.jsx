@@ -187,8 +187,8 @@ export default function Products() {
                       </td>
                       <td className="text-muted fs-13">{catMap[p.categoryId] ?? p.category ?? '—'}</td>
                       <td>
-                        <div className="fw-bold">EGP {(p.price ?? 0).toLocaleString()}</div>
-                        {p.originalPrice && <div className="text-muted fs-12" style={{ textDecoration: 'line-through' }}>EGP {p.originalPrice.toLocaleString()}</div>}
+                        <div className="fw-bold">₹{(p.price ?? 0).toLocaleString('en-IN')}</div>
+                        {p.originalPrice && <div className="text-muted fs-12" style={{ textDecoration: 'line-through' }}>₹{p.originalPrice.toLocaleString('en-IN')}</div>}
                       </td>
                       <td><StockBadge stock={p.stock} /></td>
                       <td className="text-muted fs-13">{p.gender ?? '—'}</td>
@@ -238,11 +238,11 @@ export default function Products() {
         </div>
         <div className="form-row">
           <div className="form-group">
-            <label className="form-label">Price (EGP) *</label>
+            <label className="form-label">Price (₹) *</label>
             <input className="form-control" type="number" placeholder="0.00" min="0" step="0.01" value={form.price} onChange={e => f('price', e.target.value)} />
           </div>
           <div className="form-group">
-            <label className="form-label">Original Price (EGP)</label>
+            <label className="form-label">Original Price (₹)</label>
             <input className="form-control" type="number" placeholder="0.00" min="0" step="0.01" value={form.originalPrice} onChange={e => f('originalPrice', e.target.value)} />
           </div>
         </div>

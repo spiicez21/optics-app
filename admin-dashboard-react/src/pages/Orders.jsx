@@ -9,7 +9,7 @@ import StatCard from '../components/StatCard.jsx';
 import { StatusBadge } from '../components/Badge.jsx';
 
 const PAGE_SIZE = 15;
-const fmt = n => 'EGP ' + (n ?? 0).toLocaleString();
+const fmt = n => '₹' + (n ?? 0).toLocaleString('en-IN');
 
 const STATUSES = ['pending','confirmed','processing','shipped','delivered','cancelled'];
 

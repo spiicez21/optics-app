@@ -17,7 +17,7 @@ import { StatusBadge } from '../components/Badge.jsx';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Tooltip, Legend, Filler);
 
-const fmt = n => n != null ? 'EGP ' + n.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '—';
+const fmt = n => n != null ? '₹' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '—';
 
 export default function Dashboard() {
   const [stats,         setStats]         = useState(null);
@@ -72,7 +72,7 @@ export default function Dashboard() {
           if (ts >= days[i] && ts < next) { values[i] += o.total ?? 0; break; }
         }
       });
-      setRevenueData({ labels, datasets: [{ label: 'Revenue (EGP)', data: values, borderColor: '#FF6B35', backgroundColor: 'rgba(255,107,53,.1)', borderWidth: 2.5, pointBackgroundColor: '#FF6B35', pointRadius: 4, tension: .4, fill: true }] });
+      setRevenueData({ labels, datasets: [{ label: 'Revenue (₹)', data: values, borderColor: '#FF6B35', backgroundColor: 'rgba(255,107,53,.1)', borderWidth: 2.5, pointBackgroundColor: '#FF6B35', pointRadius: 4, tension: .4, fill: true }] });
 
       // ── Status doughnut ──
       const counts = { pending: 0, confirmed: 0, shipped: 0, delivered: 0, cancelled: 0 };
@@ -110,7 +110,7 @@ export default function Dashboard() {
     plugins: { legend: { display: false } },
     scales: {
       x: { grid: { display: false } },
-      y: { grid: { color: '#f1f5f9' }, beginAtZero: true, ticks: { callback: v => 'EGP ' + v.toLocaleString() } },
+      y: { grid: { color: '#f1f5f9' }, beginAtZero: true, ticks: { callback: v => '₹' + v.toLocaleString('en-IN') } },
     },
   };
 
