@@ -8,7 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -45,7 +45,7 @@ fun CheckoutScreen(
                         if (state.currentStep == CheckoutStep.ADDRESS) onNavigateBack()
                         else viewModel.previousStep()
                     }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -131,7 +131,7 @@ fun CheckoutStepper(currentStep: CheckoutStep) {
         ).forEachIndexed { index, pair ->
             StepIndicator(pair.first, currentStep.ordinal >= pair.second.ordinal)
             if (index < 2) {
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .width(40.dp)
                         .padding(bottom = 16.dp),

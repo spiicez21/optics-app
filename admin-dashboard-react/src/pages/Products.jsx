@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import {
-  collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy,
+  collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, serverTimestamp,
 } from 'firebase/firestore';
 import { Search, Plus, Pencil, Trash2, Glasses } from 'lucide-react';
 import { db } from '../lib/firebase.js';
@@ -85,7 +85,7 @@ export default function Products() {
       categoryId: p.categoryId ?? '', gender: p.gender ?? '',
       frameShape: p.frameShape ?? '', frameMaterial: p.frameMaterial ?? '',
       lensType: p.lensType ?? '', frameColor: p.frameColor ?? '',
-      description: p.description ?? '', imageUrl: p.imageUrl ?? '',
+      description: p.description ?? '', imageUrl: p.imageUrl ?? (p.images?.[0] ?? ''),
       featured: !!p.featured, isNew: !!p.isNew,
     });
     setModalOpen(true);
@@ -107,13 +107,14 @@ export default function Products() {
       frameMaterial: form.frameMaterial || null, lensType: form.lensType || null,
       frameColor: form.frameColor.trim() || null,
       description: form.description.trim() || '',
+      images: form.imageUrl.trim() ? [form.imageUrl.trim()] : [],
       imageUrl: form.imageUrl.trim() || null,
       featured: form.featured, isNew: form.isNew,
     };
     setSaving(true);
     try {
       if (editId) { await updateDoc(doc(db, 'products', editId), data); showToast('Product updated!'); }
-      else        { await addDoc(collection(db, 'products'), data);     showToast('Product added!'); }
+      else        { await addDoc(collection(db, 'products'), { ...data, createdAt: serverTimestamp() }); showToast('Product added!'); }
       setModalOpen(false);
       await loadAll();
     } catch (e) { showToast('Error: ' + e.message, 'error'); }
@@ -177,8 +178,8 @@ export default function Products() {
                   ) : pageItems.map(p => (
                     <tr key={p.id}>
                       <td>
-                        {p.imageUrl
-                          ? <img src={p.imageUrl} className="td-img" alt={p.name} onError={e => { e.target.style.display='none'; }} />
+                        {(p.imageUrl || p.images?.[0])
+                          ? <img src={p.imageUrl || p.images[0]} className="td-img" alt={p.name} onError={e => { e.target.style.display='none'; }} />
                           : <div className="td-img-placeholder"><Glasses size={20} color="var(--text-muted)" /></div>}
                       </td>
                       <td>

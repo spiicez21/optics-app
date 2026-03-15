@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -192,7 +195,7 @@ fun ProfileScreen(
                             title = "Personal Information",
                             onClick = onNavigateToPersonalInfo
                         )
-                        Divider(modifier = Modifier.padding(horizontal = 20.dp), color = Color.Gray.copy(alpha = 0.1f))
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp), color = Color.Gray.copy(alpha = 0.1f))
                         ProfileItem(
                             icon = Icons.Default.LocationOn,
                             title = "Address Book",
@@ -218,7 +221,7 @@ fun ProfileScreen(
                             title = "My Orders",
                             onClick = onNavigateToOrders
                         )
-                        Divider(modifier = Modifier.padding(horizontal = 20.dp), color = Color.Gray.copy(alpha = 0.1f))
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp), color = Color.Gray.copy(alpha = 0.1f))
                         ProfileItem(
                             icon = Icons.Default.FavoriteBorder,
                             title = "Wishlist",
@@ -245,7 +248,7 @@ fun ProfileScreen(
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.ExitToApp,
+                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
                             contentDescription = null,
                             tint = Color.Red.copy(alpha = 0.8f),
                             modifier = Modifier.size(20.dp)
@@ -283,7 +286,7 @@ fun ProfileScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
                             tint = if (isDarkTheme) Color.White else Color.Black,
                             modifier = Modifier.size(20.dp)
@@ -369,7 +372,7 @@ fun ProfileItem(icon: androidx.compose.ui.graphics.vector.ImageVector, title: St
                 color = MaterialTheme.colorScheme.onSurface
             )
             Icon(
-                imageVector = Icons.Default.KeyboardArrowRight,
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
                 modifier = Modifier.size(20.dp)

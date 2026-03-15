@@ -9,7 +9,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
@@ -43,7 +43,7 @@ fun OrdersScreen(
                 title = { Text("My Orders", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -141,7 +141,7 @@ fun OrderCard(order: Order, onClick: () -> Unit) {
             }
             
             Spacer(modifier = Modifier.height(16.dp))
-            Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.05f))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.05f))
             Spacer(modifier = Modifier.height(16.dp))
             
             LazyRow(
@@ -165,7 +165,7 @@ fun OrderCard(order: Order, onClick: () -> Unit) {
             }
             
             Spacer(modifier = Modifier.height(16.dp))
-            Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.05f))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.05f))
             Spacer(modifier = Modifier.height(12.dp))
             
             Row(
