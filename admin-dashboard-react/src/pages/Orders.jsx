@@ -13,6 +13,11 @@ const fmt = n => '₹' + (n ?? 0).toLocaleString('en-IN');
 
 const STATUSES = ['pending','confirmed','processing','shipped','delivered','cancelled'];
 
+// Android stores timestamp as Long (epoch ms); fallback to Firestore Timestamp
+const getOrderDate = o => o.timestamp ? new Date(o.timestamp) : o.createdAt?.toDate?.() ?? null;
+// Android stores status uppercase ("PENDING"), normalise to lowercase
+const normStatus = s => (s ?? 'pending').toLowerCase();
+
 export default function Orders() {
   const { showToast } = useToast();
 
@@ -36,7 +41,7 @@ export default function Orders() {
       const snap = await getDocs(collectionGroup(db, 'orders'));
       const list = [];
       snap.forEach(d => list.push({ id: d.id, _ref: d.ref, ...d.data() }));
-      list.sort((a, b) => (b.createdAt?.toDate?.()?.getTime() ?? 0) - (a.createdAt?.toDate?.()?.getTime() ?? 0));
+      list.sort((a, b) => (getOrderDate(b)?.getTime() ?? 0) - (getOrderDate(a)?.getTime() ?? 0));
       setOrders(list);
     } catch (e) {
       showToast('Failed to load orders. Check Firestore rules.', 'error');
@@ -47,7 +52,7 @@ export default function Orders() {
   // ── Status quick-count ──
   const counts = useMemo(() => {
     const c = { pending: 0, confirmed: 0, processing: 0, shipped: 0, delivered: 0, cancelled: 0 };
-    orders.forEach(o => { const s = o.status ?? 'pending'; if (s in c) c[s]++; });
+    orders.forEach(o => { const s = normStatus(o.status); if (s in c) c[s]++; });
     return c;
   }, [orders]);
 
@@ -58,13 +63,13 @@ export default function Orders() {
     const s     = search.toLowerCase();
 
     return orders.filter(o => {
-      const name = (o.userName ?? o.userEmail ?? '').toLowerCase();
+      const name = (o.address?.name ?? o.userId ?? '').toLowerCase();
       const matchSearch = !s || o.id.toLowerCase().includes(s) || name.includes(s);
-      const matchStatus = !filterStatus || (o.status ?? 'pending') === filterStatus;
+      const matchStatus = !filterStatus || normStatus(o.status) === filterStatus;
 
       let matchDate = true;
       if (filterDate !== 'all') {
-        const ts = o.createdAt?.toDate?.() ?? null;
+        const ts = getOrderDate(o);
         if (!ts) { matchDate = false; }
         else {
           const cutoff = new Date(today);
@@ -84,7 +89,7 @@ export default function Orders() {
   // ── Open order detail ──
   const openOrder = o => {
     setSelected(o);
-    setNewStatus(o.status ?? 'pending');
+    setNewStatus(normStatus(o.status));
   };
 
   // ── Update status ──
@@ -92,9 +97,9 @@ export default function Orders() {
     if (!selected) return;
     setUpdating(true);
     try {
-      await updateDoc(selected._ref, { status: newStatus });
-      setOrders(prev => prev.map(o => o.id === selected.id ? { ...o, status: newStatus } : o));
-      setSelected(prev => ({ ...prev, status: newStatus }));
+      await updateDoc(selected._ref, { status: newStatus.toUpperCase() });
+      setOrders(prev => prev.map(o => o.id === selected.id ? { ...o, status: newStatus.toUpperCase() } : o));
+      setSelected(prev => ({ ...prev, status: newStatus.toUpperCase() }));
       showToast(`Order status updated to "${newStatus}".`);
     } catch (e) { showToast('Error: ' + e.message, 'error'); }
     finally { setUpdating(false); }
@@ -164,14 +169,14 @@ export default function Orders() {
                     <tr key={o.id}>
                       <td><span className="fw-bold fs-12 text-accent">#{o.id.slice(-8).toUpperCase()}</span></td>
                       <td>
-                        <div className="fw-bold fs-13">{o.userName ?? o.userEmail?.split('@')[0] ?? 'Customer'}</div>
-                        <div className="text-muted fs-12">{o.userEmail ?? ''}</div>
+                        <div className="fw-bold fs-13">{o.address?.name ?? o.userId ?? 'Customer'}</div>
+                        <div className="text-muted fs-12">{o.address?.phoneNumber ?? o.userId ?? ''}</div>
                       </td>
                       <td className="text-muted fs-13">{(o.items ?? []).length} item{(o.items ?? []).length !== 1 ? 's' : ''}</td>
-                      <td className="fw-bold">{fmt(o.total)}</td>
-                      <td><StatusBadge status={o.status ?? 'pending'} /></td>
+                      <td className="fw-bold">{fmt(o.totalAmount)}</td>
+                      <td><StatusBadge status={normStatus(o.status)} /></td>
                       <td className="text-muted fs-12">
-                        {o.createdAt?.toDate?.()?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) ?? '—'}
+                        {getOrderDate(o)?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) ?? '—'}
                       </td>
                       <td>
                         <button className="btn btn-secondary btn-sm" onClick={() => openOrder(o)}>View</button>
@@ -214,9 +219,9 @@ export default function Orders() {
             {/* Customer */}
             <div className="order-detail-section">
               <h4>Customer</h4>
-              <div className="detail-row"><span className="label">Name</span><span>{selected.userName ?? '—'}</span></div>
-              <div className="detail-row"><span className="label">Email</span><span>{selected.userEmail ?? '—'}</span></div>
-              <div className="detail-row"><span className="label">Phone</span><span>{selected.phone ?? selected.address?.phone ?? '—'}</span></div>
+              <div className="detail-row"><span className="label">Name</span><span>{selected.address?.name ?? '—'}</span></div>
+              <div className="detail-row"><span className="label">User ID</span><span>{selected.userId ?? '—'}</span></div>
+              <div className="detail-row"><span className="label">Phone</span><span>{selected.address?.phoneNumber ?? '—'}</span></div>
             </div>
 
             {/* Address */}
@@ -233,11 +238,11 @@ export default function Orders() {
                   <li style={{ padding: 12, color: 'var(--text-muted)' }}>No items</li>
                 ) : (selected.items ?? []).map((item, i) => (
                   <li key={i} className="order-item-row">
-                    {item.imageUrl
-                      ? <img src={item.imageUrl} className="order-item-img" alt={item.name} onError={e => e.target.style.display = 'none'} />
+                    {(item.productImageUrl ?? item.imageUrl)
+                      ? <img src={item.productImageUrl ?? item.imageUrl} className="order-item-img" alt={item.productName ?? item.name} onError={e => e.target.style.display = 'none'} />
                       : <div className="order-item-img" style={{ display: 'grid', placeItems: 'center' }}><Glasses size={22} color="var(--text-muted)" /></div>}
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600 }}>{item.name ?? '—'}</div>
+                      <div style={{ fontSize: 14, fontWeight: 600 }}>{item.productName ?? item.name ?? '—'}</div>
                       <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Qty: {item.quantity ?? 1}</div>
                     </div>
                     <div className="fw-bold fs-13">{fmt((item.price ?? 0) * (item.quantity ?? 1))}</div>
@@ -249,12 +254,12 @@ export default function Orders() {
             {/* Payment */}
             <div className="order-detail-section">
               <h4>Payment</h4>
-              <div className="detail-row"><span className="label">Subtotal</span><span>{fmt(selected.subtotal ?? selected.total)}</span></div>
+              <div className="detail-row"><span className="label">Subtotal</span><span>{fmt(selected.subtotal ?? selected.totalAmount)}</span></div>
               <div className="detail-row"><span className="label">Delivery Fee</span><span>{fmt(selected.deliveryFee ?? selected.shippingFee ?? 0)}</span></div>
               <div className="detail-row"><span className="label">Payment Method</span><span>{selected.paymentMethod ?? '—'}</span></div>
               <div className="detail-total">
                 <span>Total</span>
-                <span className="text-accent">{fmt(selected.total)}</span>
+                <span className="text-accent">{fmt(selected.totalAmount)}</span>
               </div>
             </div>
 

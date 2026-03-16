@@ -40,6 +40,9 @@ export default function Products() {
   const [deleteTarget, setDeleteTarget] = useState(null); // { id, name }
   const [deleting,     setDeleting]     = useState(false);
 
+  // Add confirmation state
+  const [confirmAdd,   setConfirmAdd]   = useState(false);
+
   useEffect(() => { loadAll(); }, []);
 
   async function loadAll() {
@@ -92,10 +95,15 @@ export default function Products() {
   };
 
   // ── Save ──
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!form.name || !form.brand || form.price === '' || form.stock === '') {
       showToast('Fill in all required fields.', 'error'); return;
     }
+    if (!editId) { setConfirmAdd(true); return; }
+    commitSave();
+  };
+
+  const commitSave = async () => {
     const catObj = categories.find(c => c.id === form.categoryId);
     const data = {
       name: form.name.trim(), brand: form.brand.trim(),
@@ -115,6 +123,7 @@ export default function Products() {
     try {
       if (editId) { await updateDoc(doc(db, 'products', editId), data); showToast('Product updated!'); }
       else        { await addDoc(collection(db, 'products'), { ...data, createdAt: serverTimestamp() }); showToast('Product added!'); }
+      setConfirmAdd(false);
       setModalOpen(false);
       await loadAll();
     } catch (e) { showToast('Error: ' + e.message, 'error'); }
@@ -334,6 +343,16 @@ export default function Products() {
         loading={deleting}
         title="Delete Product"
         message={`Are you sure you want to delete "${deleteTarget?.name}"? This cannot be undone.`}
+      />
+
+      {/* Add product confirm */}
+      <ConfirmDialog
+        open={confirmAdd}
+        onClose={() => setConfirmAdd(false)}
+        onConfirm={commitSave}
+        loading={saving}
+        title="Add Product"
+        message={`Are you sure you want to add "${form.name}" to the catalog?`}
       />
     </>
   );

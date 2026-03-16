@@ -5,14 +5,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.opticalshop.data.model.Address
-import com.opticalshop.data.model.Cart
-import com.opticalshop.data.model.CartItem
 import com.opticalshop.data.model.Order
 import com.opticalshop.domain.model.Result
 import com.opticalshop.domain.usecase.auth.GetCurrentUserUseCase
 import com.opticalshop.domain.usecase.cart.GetCartUseCase
 import com.opticalshop.domain.usecase.order.PlaceOrderUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.*
@@ -42,7 +41,6 @@ class CheckoutViewModel @Inject constructor(
                     if (result is Result.Success) {
                         val profile = result.data
                         val mainAddress = profile.addresses.find { it.isDefault } ?: profile.addresses.firstOrNull()
-                        
                         _state.value = _state.value.copy(
                             fullName = profile.displayName.ifBlank { _state.value.fullName },
                             phoneNumber = profile.phoneNumber.ifBlank { _state.value.phoneNumber },
@@ -75,24 +73,65 @@ class CheckoutViewModel @Inject constructor(
         }
     }
 
-    fun onFullNameChange(value: String) { _state.value = _state.value.copy(fullName = value) }
-    fun onPhoneChange(value: String) { _state.value = _state.value.copy(phoneNumber = value) }
-    fun onAddressChange(value: String) { _state.value = _state.value.copy(streetAddress = value) }
-    fun onCityChange(value: String) { _state.value = _state.value.copy(city = value) }
+    // ── Address handlers ──
+    fun onFullNameChange(value: String) { _state.value = _state.value.copy(fullName = value, nameError = null) }
+    fun onPhoneChange(value: String) { _state.value = _state.value.copy(phoneNumber = value, phoneError = null) }
+    fun onAddressChange(value: String) { _state.value = _state.value.copy(streetAddress = value, streetError = null) }
+    fun onCityChange(value: String) { _state.value = _state.value.copy(city = value, cityError = null) }
     fun onLandmarkChange(value: String) { _state.value = _state.value.copy(landmark = value) }
-    fun onPincodeChange(value: String) { _state.value = _state.value.copy(pincode = value) }
-    fun onPaymentMethodChange(value: String) { _state.value = _state.value.copy(paymentMethod = value) }
+    fun onPincodeChange(value: String) { _state.value = _state.value.copy(pincode = value, pincodeError = null) }
+
+    // ── Payment handlers ──
+    fun onPaymentMethodChange(value: String) {
+        _state.value = _state.value.copy(paymentMethod = value)
+    }
+    fun onUpiIdChange(value: String) { _state.value = _state.value.copy(upiId = value, paymentError = null) }
+    fun onUpiAppSelect(app: String) { _state.value = _state.value.copy(selectedUpiApp = app, upiId = "", paymentError = null) }
+    fun dismissPaymentGateway() {
+        _state.value = _state.value.copy(
+            showPaymentGateway = false,
+            isPaymentProcessing = false,
+            isPaymentSuccess = false,
+            paymentError = null
+        )
+    }
+
+    fun processUpiPayment() {
+        val s = _state.value
+        val hasApp = s.selectedUpiApp.isNotEmpty()
+        val hasUpiId = s.upiId.contains("@")
+        if (!hasApp && !hasUpiId) {
+            _state.value = _state.value.copy(paymentError = "Select a UPI app or enter a valid UPI ID")
+            return
+        }
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isPaymentProcessing = true, paymentError = null)
+            delay(2500) // Simulate gateway processing
+            _state.value = _state.value.copy(isPaymentProcessing = false, isPaymentSuccess = true)
+            delay(1500) // Show success briefly
+            _state.value = _state.value.copy(
+                showPaymentGateway = false,
+                isPaymentSuccess = false,
+                currentStep = CheckoutStep.SUMMARY
+            )
+        }
+    }
 
     fun nextStep() {
         val current = _state.value.currentStep
         when (current) {
             CheckoutStep.ADDRESS -> {
                 if (validateAddress()) {
-                    _state.value = _state.value.copy(currentStep = CheckoutStep.PAYMENT)
+                    _state.value = _state.value.copy(currentStep = CheckoutStep.PAYMENT, error = null)
                 }
             }
             CheckoutStep.PAYMENT -> {
-                _state.value = _state.value.copy(currentStep = CheckoutStep.SUMMARY)
+                if (_state.value.paymentMethod == "UPI") {
+                    // Show dummy UPI payment gateway
+                    _state.value = _state.value.copy(showPaymentGateway = true, paymentError = null)
+                } else {
+                    _state.value = _state.value.copy(currentStep = CheckoutStep.SUMMARY)
+                }
             }
             CheckoutStep.SUMMARY -> {
                 placeOrder()
@@ -101,8 +140,7 @@ class CheckoutViewModel @Inject constructor(
     }
 
     fun previousStep() {
-        val current = _state.value.currentStep
-        val prev = when (current) {
+        val prev = when (_state.value.currentStep) {
             CheckoutStep.ADDRESS -> CheckoutStep.ADDRESS
             CheckoutStep.PAYMENT -> CheckoutStep.ADDRESS
             CheckoutStep.SUMMARY -> CheckoutStep.PAYMENT
@@ -111,14 +149,37 @@ class CheckoutViewModel @Inject constructor(
     }
 
     private fun validateAddress(): Boolean {
-        with(_state.value) {
-            if (fullName.isBlank() || phoneNumber.isBlank() || streetAddress.isBlank() || city.isBlank() || pincode.isBlank()) {
-                _state.value = _state.value.copy(error = "Please fill all required fields")
-                return false
-            }
+        val s = _state.value
+
+        val nameErr = when {
+            s.fullName.isBlank()         -> "Full name is required"
+            s.fullName.trim().length < 2 -> "Name must be at least 2 characters"
+            else                         -> null
         }
-        _state.value = _state.value.copy(error = null)
-        return true
+        val phoneDigits = s.phoneNumber.filter { it.isDigit() }
+        val phoneErr = when {
+            s.phoneNumber.isBlank()  -> "Phone number is required"
+            phoneDigits.length != 10 -> "Enter a valid 10-digit phone number"
+            else                     -> null
+        }
+        val streetErr = if (s.streetAddress.isBlank()) "Street address is required" else null
+        val cityErr   = if (s.city.isBlank()) "City is required" else null
+        val pincodeDigits = s.pincode.filter { it.isDigit() }
+        val pincodeErr = when {
+            s.pincode.isBlank()       -> "Pincode is required"
+            pincodeDigits.length != 6 -> "Enter a valid 6-digit pincode"
+            else                      -> null
+        }
+
+        _state.value = _state.value.copy(
+            nameError    = nameErr,
+            phoneError   = phoneErr,
+            streetError  = streetErr,
+            cityError    = cityErr,
+            pincodeError = pincodeErr,
+            error        = null
+        )
+        return nameErr == null && phoneErr == null && streetErr == null && cityErr == null && pincodeErr == null
     }
 
     private fun placeOrder() {
@@ -137,7 +198,6 @@ class CheckoutViewModel @Inject constructor(
                         isDefault = true
                     )
                 }
-                
                 val order = Order(
                     id = UUID.randomUUID().toString(),
                     userId = user.id,
@@ -148,19 +208,12 @@ class CheckoutViewModel @Inject constructor(
                     status = "PENDING",
                     timestamp = System.currentTimeMillis()
                 )
-                
                 when (val result = placeOrderUseCase(order)) {
                     is Result.Success -> {
-                        _state.value = _state.value.copy(
-                            isLoading = false,
-                            isOrderPlaced = true
-                        )
+                        _state.value = _state.value.copy(isLoading = false, isOrderPlaced = true)
                     }
                     is Result.Error -> {
-                        _state.value = _state.value.copy(
-                            isLoading = false,
-                            error = result.exception.message
-                        )
+                        _state.value = _state.value.copy(isLoading = false, error = result.exception.message)
                     }
                     Result.Loading -> {}
                 }

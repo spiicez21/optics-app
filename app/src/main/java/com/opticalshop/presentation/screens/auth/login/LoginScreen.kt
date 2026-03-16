@@ -19,7 +19,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.opticalshop.presentation.components.OpticalButton
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -38,13 +37,16 @@ import kotlinx.coroutines.flow.collectLatest
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onRegisterClick: () -> Unit,
+    onCompleteProfile: () -> Unit = {},
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val email = viewModel.email.value
     val password = viewModel.password.value
+    val emailError = viewModel.emailError.value
+    val passwordError = viewModel.passwordError.value
     val state = viewModel.state.value
     val context = LocalContext.current
-    
+
     val googleSignInClient = remember {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(context.getString(R.string.default_web_client_id))
@@ -56,15 +58,14 @@ fun LoginScreen(
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        // Always parse the intent — Google returns RESULT_CANCELED even on error (e.g. code 10)
         val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
         try {
             val account = task.getResult(ApiException::class.java)
             account?.idToken?.let { idToken ->
                 viewModel.onGoogleLogin(
-                    idToken    = idToken,
+                    idToken     = idToken,
                     displayName = account.displayName ?: "",
-                    photoUrl   = account.photoUrl?.toString() ?: ""
+                    photoUrl    = account.photoUrl?.toString() ?: ""
                 )
             } ?: Toast.makeText(context, "Google Sign-In: no ID token returned", Toast.LENGTH_LONG).show()
         } catch (e: ApiException) {
@@ -80,12 +81,9 @@ fun LoginScreen(
     LaunchedEffect(key1 = true) {
         viewModel.eventFlow.collectLatest { event ->
             when (event) {
-                is LoginViewModel.UiEvent.NavigateToHome -> {
-                    onLoginSuccess()
-                }
-                is LoginViewModel.UiEvent.ShowError -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                }
+                is LoginViewModel.UiEvent.NavigateToHome            -> onLoginSuccess()
+                is LoginViewModel.UiEvent.NavigateToCompleteProfile -> onCompleteProfile()
+                is LoginViewModel.UiEvent.ShowError                 -> Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -108,15 +106,15 @@ fun LoginScreen(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Text(
                 text = "Login to your account to continue",
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color.Gray
             )
-            
+
             Spacer(modifier = Modifier.height(48.dp))
 
             OpticalTextField(
@@ -125,7 +123,9 @@ fun LoginScreen(
                 label = "",
                 placeholder = "Email Address",
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = Color.Gray) }
+                leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = if (emailError != null) MaterialTheme.colorScheme.error else Color.Gray) },
+                isError = emailError != null,
+                errorMessage = emailError
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -137,11 +137,13 @@ fun LoginScreen(
                 placeholder = "Password",
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = Color.Gray) }
+                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = if (passwordError != null) MaterialTheme.colorScheme.error else Color.Gray) },
+                isError = passwordError != null,
+                errorMessage = passwordError
             )
 
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             Text(
                 text = "Forgot Password?",
                 style = MaterialTheme.typography.bodyMedium,
@@ -158,33 +160,24 @@ fun LoginScreen(
                 isLoading = state is com.opticalshop.domain.model.Result.Loading,
                 modifier = Modifier.fillMaxWidth()
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             OutlinedButton(
-                onClick = { 
-                    launcher.launch(googleSignInClient.signInIntent)
-                },
+                onClick = { launcher.launch(googleSignInClient.signInIntent) },
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                 Text("Continue with Google", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                Text("Continue with Google", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Row {
-                Text(
-                    text = "Don't have an account? ",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
-                )
+                Text(text = "Don't have an account? ", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
                 Text(
                     text = "Sign Up",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    ),
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary),
                     modifier = Modifier.clickable { onRegisterClick() }
                 )
             }

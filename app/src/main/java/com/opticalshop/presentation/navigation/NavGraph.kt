@@ -24,6 +24,7 @@ import com.opticalshop.presentation.screens.orders.OrderDetailScreen
 import com.opticalshop.presentation.screens.orders.OrdersScreen
 import com.opticalshop.presentation.screens.product.ProductDetailScreen
 import com.opticalshop.presentation.screens.profile.ProfileScreen
+import com.opticalshop.presentation.screens.complete_profile.CompleteProfileScreen
 import com.opticalshop.presentation.screens.splash.SplashScreen
 
 private const val NAV_ANIM_DURATION = 300
@@ -94,6 +95,11 @@ fun NavGraph(
                 },
                 onRegisterClick = {
                     navController.navigate(Screen.Register.route)
+                },
+                onCompleteProfile = {
+                    navController.navigate(Screen.CompleteProfile.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
                 }
             )
         }
@@ -108,6 +114,22 @@ fun NavGraph(
                 },
                 onLoginClick = {
                     navController.popBackStack()
+                },
+                onCompleteProfile = {
+                    navController.navigate(Screen.CompleteProfile.route) {
+                        popUpTo(Screen.Register.route) { inclusive = true }
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Screen.CompleteProfile.route) {
+            CompleteProfileScreen(
+                onProfileComplete = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.CompleteProfile.route) { inclusive = true }
+                    }
                 }
             )
         }

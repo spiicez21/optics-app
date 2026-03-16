@@ -1,7 +1,9 @@
 package com.opticalshop.presentation.screens.address
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -9,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.opticalshop.presentation.components.OpticalButton
@@ -23,9 +26,7 @@ fun AddEditAddressScreen(
     val state = viewModel.state.value
 
     LaunchedEffect(state.isAddressAdded) {
-        if (state.isAddressAdded) {
-            onNavigateBack()
-        }
+        if (state.isAddressAdded) onNavigateBack()
     }
 
     Scaffold(
@@ -45,50 +46,62 @@ fun AddEditAddressScreen(
                 .padding(padding)
                 .fillMaxSize()
                 .padding(16.dp)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             OpticalTextField(
                 value = state.fullName,
                 onValueChange = viewModel::onFullNameChange,
-                label = "Full Name"
+                label = "Full Name",
+                isError = state.nameError != null,
+                errorMessage = state.nameError
             )
-            Spacer(modifier = Modifier.height(12.dp))
+
             OpticalTextField(
                 value = state.phoneNumber,
                 onValueChange = viewModel::onPhoneChange,
-                label = "Phone Number"
+                label = "Phone Number",
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                isError = state.phoneError != null,
+                errorMessage = state.phoneError
             )
-            Spacer(modifier = Modifier.height(12.dp))
+
             OpticalTextField(
                 value = state.streetAddress,
                 onValueChange = viewModel::onAddressChange,
-                label = "Street Address"
+                label = "Street Address",
+                isError = state.streetError != null,
+                errorMessage = state.streetError
             )
-            Spacer(modifier = Modifier.height(12.dp))
-            Row {
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
                 OpticalTextField(
                     value = state.city,
                     onValueChange = viewModel::onCityChange,
                     label = "City",
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    isError = state.cityError != null,
+                    errorMessage = state.cityError
                 )
-                Spacer(modifier = Modifier.width(8.dp))
                 OpticalTextField(
                     value = state.pincode,
-                    onValueChange = viewModel::onPincodeChange,
+                    onValueChange = { if (it.all { c -> c.isDigit() } && it.length <= 6) viewModel.onPincodeChange(it) },
                     label = "Pincode",
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    isError = state.pincodeError != null,
+                    errorMessage = state.pincodeError
                 )
             }
-            Spacer(modifier = Modifier.height(12.dp))
+
             OpticalTextField(
                 value = state.landmark,
                 onValueChange = viewModel::onLandmarkChange,
                 label = "Landmark (Optional)"
             )
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -96,18 +109,17 @@ fun AddEditAddressScreen(
                 Text("Set as Default Address")
                 Switch(checked = state.isDefault, onCheckedChange = viewModel::onDefaultChange)
             }
-            
-            Spacer(modifier = Modifier.height(32.dp))
-            
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             OpticalButton(
                 text = "Save Address",
                 onClick = { viewModel.saveAddress() },
                 isLoading = state.isLoading
             )
-            
+
             if (state.error != null) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(text = state.error, color = MaterialTheme.colorScheme.error)
+                Text(text = state.error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
             }
         }
     }
