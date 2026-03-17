@@ -351,8 +351,29 @@ export default function Products() {
         onClose={() => setConfirmAdd(false)}
         onConfirm={commitSave}
         loading={saving}
-        title="Add Product"
-        message={`Are you sure you want to add "${form.name}" to the catalog?`}
+        confirmLabel="Add Product"
+        title="Confirm Add Product"
+        message={
+          <div style={{ fontSize: 13, lineHeight: 1.8 }}>
+            <p style={{ marginBottom: 10 }}>Are you sure you want to add this product?</p>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              {[
+                ['Name',     form.name],
+                ['Brand',    form.brand],
+                ['Price',    form.price ? `₹${parseFloat(form.price).toLocaleString('en-IN')}` : '—'],
+                ['Orig. Price', form.originalPrice ? `₹${parseFloat(form.originalPrice).toLocaleString('en-IN')}` : '—'],
+                ['Stock',    form.stock],
+                ['Category', categories.find(c => c.id === form.categoryId)?.name || '—'],
+                ['Gender',   form.gender || '—'],
+              ].map(([label, val]) => (
+                <tr key={label}>
+                  <td style={{ color: 'var(--text-muted)', paddingRight: 12, whiteSpace: 'nowrap' }}>{label}</td>
+                  <td style={{ fontWeight: 600 }}>{val}</td>
+                </tr>
+              ))}
+            </table>
+          </div>
+        }
       />
     </>
   );

@@ -25,7 +25,7 @@ export default function ConfirmDialog({
     >
       <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
         <AlertTriangle size={22} color="var(--warning)" style={{ flexShrink: 0, marginTop: 1 }} />
-        <p style={{ fontSize: 14, lineHeight: 1.6 }}>{message}</p>
+        <div style={{ fontSize: 14, lineHeight: 1.6 }}>{message}</div>
       </div>
     </Modal>
   );
