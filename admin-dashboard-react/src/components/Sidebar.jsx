@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ShoppingBag, Tag, Package, LogOut, Glasses } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Tag, Package, LogOut, Glasses, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const NAV = [
@@ -7,6 +7,7 @@ const NAV = [
   { to: '/products',   icon: ShoppingBag,     label: 'Products'   },
   { to: '/categories', icon: Tag,             label: 'Categories' },
   { to: '/orders',     icon: Package,         label: 'Orders'     },
+  { to: '/admins',     icon: ShieldCheck,     label: 'Admins'     },
 ];
 
 export default function Sidebar() {

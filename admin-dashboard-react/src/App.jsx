@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard.jsx';
 import Products from './pages/Products.jsx';
 import Categories from './pages/Categories.jsx';
 import Orders from './pages/Orders.jsx';
+import Admins from './pages/Admins.jsx';
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
                 <Route path="/products"   element={<Products />} />
                 <Route path="/categories" element={<Categories />} />
                 <Route path="/orders"     element={<Orders />} />
+                <Route path="/admins"     element={<Admins />} />
               </Route>
             </Route>
             <Route path="*" element={<Navigate to="/dashboard" replace />} />

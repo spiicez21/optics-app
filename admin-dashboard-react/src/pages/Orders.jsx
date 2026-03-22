@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { collectionGroup, getDocs, updateDoc } from 'firebase/firestore';
-import { Clock, CheckCircle2, Truck, PackageCheck, Search, Glasses } from 'lucide-react';
+import { Clock, CheckCircle2, Truck, PackageCheck, Search, Glasses, CreditCard, Banknote, Copy } from 'lucide-react';
 import { db } from '../lib/firebase.js';
 import { useToast } from '../context/ToastContext.jsx';
 import Modal from '../components/Modal.jsx';
@@ -10,6 +10,33 @@ import { StatusBadge } from '../components/Badge.jsx';
 
 const PAGE_SIZE = 15;
 const fmt = n => '₹' + (n ?? 0).toLocaleString('en-IN');
+
+const PaymentBadge = ({ method, status }) => {
+  const isPaid   = (status ?? '').toUpperCase() === 'PAID';
+  const isRazor  = (method ?? '').toUpperCase() === 'RAZORPAY';
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <span style={{
+        display: 'inline-flex', alignItems: 'center', gap: 4,
+        fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 99,
+        background: isRazor ? 'rgba(99,102,241,.12)' : 'rgba(16,185,129,.12)',
+        color: isRazor ? '#6366f1' : '#059669'
+      }}>
+        {isRazor ? <CreditCard size={10} /> : <Banknote size={10} />}
+        {isRazor ? 'Razorpay' : 'COD'}
+      </span>
+      <span style={{
+        fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 99,
+        background: isPaid ? 'rgba(16,185,129,.12)' : 'rgba(245,158,11,.12)',
+        color: isPaid ? '#059669' : '#d97706', alignSelf: 'flex-start'
+      }}>
+        {isPaid ? 'PAID' : 'PENDING'}
+      </span>
+    </div>
+  );
+};
+
+const copyToClipboard = text => navigator.clipboard?.writeText(text);
 
 const STATUSES = ['pending','confirmed','processing','shipped','delivered','cancelled'];
 
@@ -159,12 +186,12 @@ export default function Orders() {
                 <thead>
                   <tr>
                     <th>Order ID</th><th>Customer</th><th>Items</th>
-                    <th>Total</th><th>Status</th><th>Date</th><th>Actions</th>
+                    <th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {pageItems.length === 0 ? (
-                    <tr><td colSpan={7}><div className="empty-state"><PackageCheck size={44} color="var(--border)" style={{ marginBottom: 12 }} /><p>No orders found.</p></div></td></tr>
+                    <tr><td colSpan={8}><div className="empty-state"><PackageCheck size={44} color="var(--border)" style={{ marginBottom: 12 }} /><p>No orders found.</p></div></td></tr>
                   ) : pageItems.map(o => (
                     <tr key={o.id}>
                       <td><span className="fw-bold fs-12 text-accent">#{o.id.slice(-8).toUpperCase()}</span></td>
@@ -174,6 +201,7 @@ export default function Orders() {
                       </td>
                       <td className="text-muted fs-13">{(o.items ?? []).length} item{(o.items ?? []).length !== 1 ? 's' : ''}</td>
                       <td className="fw-bold">{fmt(o.totalAmount)}</td>
+                      <td><PaymentBadge method={o.paymentMethod} status={o.paymentStatus} /></td>
                       <td><StatusBadge status={normStatus(o.status)} /></td>
                       <td className="text-muted fs-12">
                         {getOrderDate(o)?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) ?? '—'}
@@ -254,9 +282,43 @@ export default function Orders() {
             {/* Payment */}
             <div className="order-detail-section">
               <h4>Payment</h4>
+              <div className="detail-row">
+                <span className="label">Method</span>
+                <PaymentBadge method={selected.paymentMethod} status={selected.paymentStatus} />
+              </div>
+              <div className="detail-row">
+                <span className="label">Payment Status</span>
+                <span style={{
+                  fontWeight: 600,
+                  color: (selected.paymentStatus ?? '').toUpperCase() === 'PAID' ? '#059669' : '#d97706'
+                }}>
+                  {(selected.paymentStatus ?? 'PENDING').toUpperCase()}
+                </span>
+              </div>
+              {(selected.paymentMethod ?? '').toUpperCase() === 'RAZORPAY' && (
+                <div className="detail-row">
+                  <span className="label">Transaction ID</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <code style={{
+                      fontSize: 12, background: 'var(--bg)', padding: '2px 8px',
+                      borderRadius: 6, fontFamily: 'monospace', color: 'var(--text)'
+                    }}>
+                      {selected.paymentId || '—'}
+                    </code>
+                    {selected.paymentId && (
+                      <button
+                        onClick={() => copyToClipboard(selected.paymentId)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--text-muted)' }}
+                        title="Copy transaction ID"
+                      >
+                        <Copy size={13} />
+                      </button>
+                    )}
+                  </span>
+                </div>
+              )}
               <div className="detail-row"><span className="label">Subtotal</span><span>{fmt(selected.subtotal ?? selected.totalAmount)}</span></div>
               <div className="detail-row"><span className="label">Delivery Fee</span><span>{fmt(selected.deliveryFee ?? selected.shippingFee ?? 0)}</span></div>
-              <div className="detail-row"><span className="label">Payment Method</span><span>{selected.paymentMethod ?? '—'}</span></div>
               <div className="detail-total">
                 <span>Total</span>
                 <span className="text-accent">{fmt(selected.totalAmount)}</span>
