@@ -29,16 +29,13 @@ data class CheckoutState(
     val pincodeError: String? = null,
 
     // Payment fields
-    val paymentMethod: String = "COD", // COD | UPI
-
-    // Dummy payment gateway (UPI)
-    val showPaymentGateway: Boolean = false,
-    val isPaymentProcessing: Boolean = false,
-    val isPaymentSuccess: Boolean = false,
-    val upiId: String = "",
-    val selectedUpiApp: String = "",
+    val paymentMethod: String = "COD", // COD | RAZORPAY
+    val shouldLaunchRazorpay: Boolean = false,
+    val isRazorpayPaymentSuccessful: Boolean = false,
+    val razorpayPaymentId: String = "",
     val paymentError: String? = null,
 
+    val isFetchingCity: Boolean = false,
     val isLoading: Boolean = false,
     val error: String? = null,
     val isOrderPlaced: Boolean = false

@@ -11,9 +11,12 @@ import com.opticalshop.domain.usecase.auth.GetCurrentUserUseCase
 import com.opticalshop.domain.usecase.cart.GetCartUseCase
 import com.opticalshop.domain.usecase.order.PlaceOrderUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import java.net.URL
 import java.util.*
 import javax.inject.Inject
 
@@ -79,42 +82,65 @@ class CheckoutViewModel @Inject constructor(
     fun onAddressChange(value: String) { _state.value = _state.value.copy(streetAddress = value, streetError = null) }
     fun onCityChange(value: String) { _state.value = _state.value.copy(city = value, cityError = null) }
     fun onLandmarkChange(value: String) { _state.value = _state.value.copy(landmark = value) }
-    fun onPincodeChange(value: String) { _state.value = _state.value.copy(pincode = value, pincodeError = null) }
+    fun onPincodeChange(value: String) {
+        _state.value = _state.value.copy(pincode = value, pincodeError = null)
+        if (value.length == 6) fetchCityFromPincode(value)
+    }
+
+    private fun fetchCityFromPincode(pincode: String) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isFetchingCity = true)
+            try {
+                val city = withContext(Dispatchers.IO) {
+                    val json = URL("https://api.postalpincode.in/pincode/$pincode").readText()
+                    val root = JSONArray(json).getJSONObject(0)
+                    if (root.getString("Status") == "Success") {
+                        val postOffice = root.getJSONArray("PostOffice").getJSONObject(0)
+                        postOffice.getString("District")
+                    } else null
+                }
+                if (city != null) {
+                    _state.value = _state.value.copy(city = city, cityError = null, isFetchingCity = false)
+                } else {
+                    _state.value = _state.value.copy(isFetchingCity = false)
+                }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(isFetchingCity = false)
+            }
+        }
+    }
 
     // ── Payment handlers ──
     fun onPaymentMethodChange(value: String) {
-        _state.value = _state.value.copy(paymentMethod = value)
-    }
-    fun onUpiIdChange(value: String) { _state.value = _state.value.copy(upiId = value, paymentError = null) }
-    fun onUpiAppSelect(app: String) { _state.value = _state.value.copy(selectedUpiApp = app, upiId = "", paymentError = null) }
-    fun dismissPaymentGateway() {
         _state.value = _state.value.copy(
-            showPaymentGateway = false,
-            isPaymentProcessing = false,
-            isPaymentSuccess = false,
-            paymentError = null
+            paymentMethod = value,
+            paymentError = null,
+            shouldLaunchRazorpay = false
         )
     }
 
-    fun processUpiPayment() {
-        val s = _state.value
-        val hasApp = s.selectedUpiApp.isNotEmpty()
-        val hasUpiId = s.upiId.contains("@")
-        if (!hasApp && !hasUpiId) {
-            _state.value = _state.value.copy(paymentError = "Select a UPI app or enter a valid UPI ID")
-            return
-        }
-        viewModelScope.launch {
-            _state.value = _state.value.copy(isPaymentProcessing = true, paymentError = null)
-            delay(2500) // Simulate gateway processing
-            _state.value = _state.value.copy(isPaymentProcessing = false, isPaymentSuccess = true)
-            delay(1500) // Show success briefly
-            _state.value = _state.value.copy(
-                showPaymentGateway = false,
-                isPaymentSuccess = false,
-                currentStep = CheckoutStep.SUMMARY
-            )
-        }
+    fun onRazorpayFlowLaunched() {
+        _state.value = _state.value.copy(
+            shouldLaunchRazorpay = false
+        )
+    }
+
+    fun onRazorpayPaymentSuccess(paymentId: String) {
+        _state.value = _state.value.copy(
+            isRazorpayPaymentSuccessful = true,
+            razorpayPaymentId = paymentId,
+            paymentError = null,
+            currentStep = CheckoutStep.SUMMARY
+        )
+    }
+
+    fun onRazorpayPaymentFailed(message: String?) {
+        _state.value = _state.value.copy(
+            isRazorpayPaymentSuccessful = false,
+            razorpayPaymentId = "",
+            shouldLaunchRazorpay = false,
+            paymentError = message ?: "Payment cancelled"
+        )
     }
 
     fun nextStep() {
@@ -126,9 +152,8 @@ class CheckoutViewModel @Inject constructor(
                 }
             }
             CheckoutStep.PAYMENT -> {
-                if (_state.value.paymentMethod == "UPI") {
-                    // Show dummy UPI payment gateway
-                    _state.value = _state.value.copy(showPaymentGateway = true, paymentError = null)
+                if (_state.value.paymentMethod == "RAZORPAY") {
+                    _state.value = _state.value.copy(shouldLaunchRazorpay = true, paymentError = null)
                 } else {
                     _state.value = _state.value.copy(currentStep = CheckoutStep.SUMMARY)
                 }
@@ -205,6 +230,8 @@ class CheckoutViewModel @Inject constructor(
                     totalAmount = _state.value.totalAmount,
                     address = address,
                     paymentMethod = _state.value.paymentMethod,
+                    paymentId = _state.value.razorpayPaymentId,
+                    paymentStatus = if (_state.value.paymentMethod == "RAZORPAY") "PAID" else "PENDING",
                     status = "PENDING",
                     timestamp = System.currentTimeMillis()
                 )

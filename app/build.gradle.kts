@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -5,6 +7,11 @@ plugins {
     id("com.google.gms.google-services")
     id("dagger.hilt.android.plugin")
     id("com.google.devtools.ksp")
+}
+
+val localProperties = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) load(f.inputStream())
 }
 
 android {
@@ -22,6 +29,9 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        val razorpayKeyId = localProperties.getProperty("RAZORPAY_KEY_ID") ?: ""
+        buildConfigField("String", "RAZORPAY_KEY_ID", "\"$razorpayKeyId\"")
     }
 
     buildTypes {
@@ -42,6 +52,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     packaging {
         resources {
@@ -95,6 +106,9 @@ dependencies {
     
     // Lottie for animations (optional)
     implementation("com.airbnb.android:lottie-compose:6.4.0")
+
+    // Razorpay payment gateway
+    implementation("com.razorpay:checkout:1.6.40")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

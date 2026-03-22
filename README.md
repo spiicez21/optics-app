@@ -49,8 +49,14 @@ The project uses **GitHub Actions** for automated builds.
 ### Running the App
 1. Clone the repository.
 2. Open the project in Android Studio.
-3. Sync project with Gradle files.
-4. Run the `:app` module on an emulator or physical device.
+3. Add your Razorpay key in `local.properties`:
+
+	```properties
+	RAZORPAY_KEY_ID=rzp_test_your_key_here
+	```
+
+4. Sync project with Gradle files.
+5. Run the `:app` module on an emulator or physical device.
 
 ---
 *Created and maintained by @spiicez21.*

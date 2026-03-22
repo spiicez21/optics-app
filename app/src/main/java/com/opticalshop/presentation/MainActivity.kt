@@ -3,19 +3,26 @@ package com.opticalshop.presentation
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
+import com.opticalshop.presentation.payment.RazorpayEventBus
+import com.opticalshop.presentation.payment.RazorpayPaymentEvent
 import com.opticalshop.presentation.navigation.NavGraph
 import com.opticalshop.presentation.theme.OpticalShopTheme
+import com.razorpay.Checkout
+import com.razorpay.PaymentData
+import com.razorpay.PaymentResultWithDataListener
 import dagger.hilt.android.AndroidEntryPoint
-import androidx.activity.viewModels
-import androidx.compose.runtime.collectAsState
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity(), PaymentResultWithDataListener {
     
     @javax.inject.Inject
     lateinit var dataSeeder: com.opticalshop.utils.DataSeeder
@@ -38,6 +45,8 @@ class MainActivity : ComponentActivity() {
         // You can comment this out after running the app once.
         dataSeeder.seedProducts()
 
+        Checkout.preload(applicationContext)
+
         setContent {
             val isDarkTheme = themeViewModel.isDarkTheme.collectAsState(initial = null).value
             val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
@@ -57,5 +66,19 @@ class MainActivity : ComponentActivity() {
     @androidx.compose.runtime.Composable
     private fun NavHostControllerWrapper(navController: androidx.navigation.NavHostController) {
         com.opticalshop.presentation.navigation.MainContainer(navController = navController)
+    }
+
+    override fun onPaymentSuccess(razorpayPaymentId: String?, paymentData: PaymentData?) {
+        val paymentId = paymentData?.paymentId ?: razorpayPaymentId.orEmpty()
+        lifecycleScope.launch {
+            RazorpayEventBus.emit(RazorpayPaymentEvent.Success(paymentId = paymentId))
+        }
+    }
+
+    override fun onPaymentError(code: Int, response: String?, paymentData: PaymentData?) {
+        val message = response ?: "Payment failed with code $code"
+        lifecycleScope.launch {
+            RazorpayEventBus.emit(RazorpayPaymentEvent.Failure(message = message))
+        }
     }
 }

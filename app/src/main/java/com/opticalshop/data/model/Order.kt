@@ -10,6 +10,8 @@ data class Order(
     val totalAmount: Double = 0.0,
     val address: Address = Address(),
     val paymentMethod: String = "",
+    val paymentId: String = "",
+    val paymentStatus: String = "PENDING",
     val status: String = "PENDING",
     val timestamp: Long = System.currentTimeMillis()
 )
